@@ -9,13 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.ewm.client.BaseClient;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @Service
 public class CompilationPublicClient extends BaseClient {
-    private static final String API_PUBLIC_PREFIX = "/compilation";
+    private static final String API_PUBLIC_PREFIX = "/compilations";
 
     @Autowired
     public CompilationPublicClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
@@ -27,27 +25,17 @@ public class CompilationPublicClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> getAllEvents(String text, List<Integer> categories,
-                                               boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                               boolean onlyAvailable, String sort,
-                                               Integer from, Integer size) {
+    public ResponseEntity<Object> getAllCompilations(boolean pinned, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
-                "text", text,
-                "categories", categories,
-                "paid", paid,
-                "rangeStart", rangeStart,
-                "rangeEnd", rangeEnd,
-                "onlyAvailable", onlyAvailable,
-                "sort", sort,
+                "pinned", pinned,
                 "from", from,
                 "size", size
         );
-        return get("?text={text}&categories={categories}&paid={paid}&rangeStart={rangeStart}&rangeEnd={rangeEnd}" +
-                "&onlyAvailable={onlyAvailable}&sort={sort}&from={from}&size={size}", parameters);
+        return get("?pinned={pinned}&from={from}&size={size}", parameters);
     }
 
-    public ResponseEntity<Object> getEventById(long eventId) {
-        return get("/" + eventId);
+    public ResponseEntity<Object> getCompilationById(long compId) {
+        return get("/" + compId);
     }
 }
 
