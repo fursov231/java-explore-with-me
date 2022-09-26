@@ -19,29 +19,29 @@ public class CategoryController {
     private final CategoryPublicClient publicClient;
     private final CategoryAdminClient adminClient;
 
-    @GetMapping
+    @GetMapping("/categories")
     public ResponseEntity<Object> getAllCats(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
         return publicClient.getAllCategories(from, size);
     }
 
-    @GetMapping("/{catId}")
+    @GetMapping("/categories/{catId}")
     public ResponseEntity<Object> getCatById(@PathVariable long catId) {
         return publicClient.getCategoryById(catId);
     }
 
-    @PatchMapping
-    public ResponseEntity<Object> updateCat(@RequestHeader("X-Sharer-User-Id") long userId, CategoryDto categoryDto) {
-        return adminClient.updateCategory(userId, categoryDto);
+    @PatchMapping("/admin/categories")
+    public ResponseEntity<Object> updateCat(@RequestHeader("X-Sharer-User-Id") long ownerId, CategoryDto categoryDto) {
+        return adminClient.updateCategory(ownerId, categoryDto);
     }
 
-    @PostMapping
-    public ResponseEntity<Object> addCat(@RequestHeader("X-Sharer-User-Id") long userId, CategoryRequestDto categoryRequestDto) {
-        return adminClient.addCategory(userId, categoryRequestDto);
+    @PostMapping("/admin/categories")
+    public ResponseEntity<Object> addCat(@RequestHeader("X-Sharer-User-Id") long ownerId, CategoryRequestDto categoryRequestDto) {
+        return adminClient.addCategory(ownerId, categoryRequestDto);
     }
 
-    @DeleteMapping("/{catId}")
-    public ResponseEntity<Object> deleteCatById(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long catId) {
-        return adminClient.deleteCategory(userId, catId);
+    @DeleteMapping("/admin/categories/{catId}")
+    public ResponseEntity<Object> deleteCatById(@RequestHeader("X-Sharer-User-Id") long ownerId, @PathVariable long catId) {
+        return adminClient.deleteCategory(ownerId, catId);
     }
 }

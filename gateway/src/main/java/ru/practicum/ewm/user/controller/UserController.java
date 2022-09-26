@@ -16,23 +16,23 @@ import javax.validation.constraints.PositiveOrZero;
 public class UserController {
     private final UserAdminClient adminClient;
 
-    @GetMapping
-    public ResponseEntity<Object> getAllUsers(@RequestHeader("X-Sharer-User-Id") long userId,
+    @GetMapping("/admin/users")
+    public ResponseEntity<Object> getAllUsers(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                               @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return adminClient.getAllUsers(userId, from, size);
+        return adminClient.getAllUsers(ownerId, from, size);
     }
 
-    @PostMapping
-    public ResponseEntity<Object> addUser(@RequestHeader("X-Sharer-User-Id") long userId,
+    @PostMapping("/admin/users")
+    public ResponseEntity<Object> addUser(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                           NewUserRequest newUserRequest) {
-        return adminClient.addUser(userId, newUserRequest);
+        return adminClient.addUser(ownerId, newUserRequest);
     }
 
-    @DeleteMapping("/{removableUserId}")
-    public ResponseEntity<Object> deleteUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                          @PathVariable long removableUserId) {
-        return adminClient.deleteUserById(userId, removableUserId);
+    @DeleteMapping("/admin/users/{userId}")
+    public ResponseEntity<Object> deleteUser(@RequestHeader("X-Sharer-User-Id") long ownerId,
+                                          @PathVariable long userId) {
+        return adminClient.deleteUserById(ownerId, userId);
     }
 
 }

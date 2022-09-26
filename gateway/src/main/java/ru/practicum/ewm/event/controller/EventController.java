@@ -23,7 +23,7 @@ public class EventController {
     private final EventPrivateClient privateClient;
     private final EventPublicClient publicClient;
 
-    @GetMapping
+    @GetMapping("/events")
     public ResponseEntity<Object> getAllEvents(@RequestParam(name = "text") String text,
                                                @RequestParam(name = "categories") List<Integer> categories,
                                                @RequestParam(name = "paid") boolean paid,
@@ -36,7 +36,7 @@ public class EventController {
         return publicClient.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/events/{id}")
     public ResponseEntity<Object> getEventById(@PathVariable long id) {
         return publicClient.getEventById(id);
     }
