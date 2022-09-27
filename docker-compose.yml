@@ -28,7 +28,7 @@ services:
       POSTGRES_PASSWORD: admin
 
   ewm-service:
-    build: ./ewm
+    build: ewm1
     image: fursov231/ewm-service
     container_name: ewm_container
     ports:

@@ -1,19 +1,22 @@
-package event.dto;
+package ru.practicum.ewm.event.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
-public class NewEventDto {
+@Builder
+public class AdminUpdateEventRequest {
     private String annotation;
     private Integer category;
     private String description;
-    private String eventDate;
+    private LocalDateTime eventDate;
     private Location location;
     private boolean paid;
-    Integer participantLimit;
+    private Integer paticipantLimit;
     private boolean requestModeration;
     private String title;
-    
 }
