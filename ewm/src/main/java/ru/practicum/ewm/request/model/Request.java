@@ -2,6 +2,7 @@ package ru.practicum.ewm.request.model;
 
 import lombok.*;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.event.model.State;
 import ru.practicum.ewm.user.model.User;
 
 import javax.persistence.*;
@@ -28,6 +29,6 @@ public class Request {
     @ManyToOne
     private User requester;
 
-    private String status; //todo
+    private State status; //todo
     private LocalDateTime created;
 }
