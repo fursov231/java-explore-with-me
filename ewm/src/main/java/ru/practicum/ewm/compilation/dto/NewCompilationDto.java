@@ -9,9 +9,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @Builder
-public class CompilationDto {
-    private List<EventShortDto> events;
-    Long id;
-    boolean pinned;
-    String title;
+public class NewCompilationDto {
+    private List<Integer> events;
+    private boolean pinned;
+    private String title;
 }

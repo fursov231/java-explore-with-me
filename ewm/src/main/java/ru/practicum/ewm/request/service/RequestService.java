@@ -44,6 +44,7 @@ public class RequestService {
         throw new NotFoundException("Указанный пользователь не найден");
     }
 
+    @Transactional
     public ParticipationRequestDto addRequest(long ownerId, long userId, long eventId) {
         Optional<User> optionalUser = userRepository.findById(ownerId);
         if (optionalUser.isPresent()) {
@@ -58,6 +59,7 @@ public class RequestService {
         throw new NotFoundException("Указанный пользователь не найден");
     }
 
+    @Transactional
     public void cancelRequest(long ownerId, long userId, long requestId) {
         Optional<User> optionalUser = userRepository.findById(ownerId);
         if (optionalUser.isPresent()) {

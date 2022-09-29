@@ -40,10 +40,7 @@ create table if not exists compilations
     id       bigserial
         primary key,
     title    varchar(128) not null,
-    pinned   boolean      not null,
-    event_id bigint
-        constraint compilations_events_id_fk
-            references events
+    pinned   boolean      not null
 );
 
 create table if not exists compilations_events
@@ -53,6 +50,7 @@ create table if not exists compilations_events
         constraint compilations_events_compilations_id_fk
             references compilations,
     event_id       integer not null
+        primary key
         constraint compilations_events_events_id_fk
             references events
 );

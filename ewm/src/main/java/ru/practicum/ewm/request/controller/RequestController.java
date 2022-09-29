@@ -19,13 +19,14 @@ public class RequestController {
     }
 
     @PostMapping("/users/{userId}/requests")
-    public ResponseEntity<Object> addRequest(@RequestHeader("X-Sharer-User-Id") long ownerId,  @PathVariable long userId, @RequestParam long eventId) {
+    public ParticipationRequestDto addRequest(@RequestHeader("X-Sharer-User-Id") long ownerId,  @PathVariable long userId, @RequestParam long eventId) {
         return requestService.addRequest(ownerId, userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
     public ResponseEntity<Object> cancelRequest(@RequestHeader("X-Sharer-User-Id") long ownerId,  @PathVariable long userId, @PathVariable long requestId) {
-        return requestService.cancelRequest(ownerId, userId, requestId);
+         requestService.cancelRequest(ownerId, userId, requestId);
+         return ResponseEntity.ok("Запрос на участие удален");
     }
 
 }

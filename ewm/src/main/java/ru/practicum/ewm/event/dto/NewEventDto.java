@@ -4,6 +4,7 @@ package ru.practicum.ewm.event.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.ewm.event.model.Location;
 
 import java.time.LocalDateTime;
 

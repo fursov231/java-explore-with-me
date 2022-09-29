@@ -1,9 +1,10 @@
-package ru.practicum.ewm.event.dto;
+package ru.practicum.ewm.compilation.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.ewm.category.dto.CategoryDto;
+import ru.practicum.ewm.user.dto.UserShortDto;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,9 @@ public class EventShortDto {
     private CategoryDto category;
     private Integer confirmedRequests;
     private String eventDate;
-    private Integer id;
-
+    private Long id;
+    private UserShortDto initiator;
+    private boolean paid;
+    private String title;
+    private Integer views;
 }

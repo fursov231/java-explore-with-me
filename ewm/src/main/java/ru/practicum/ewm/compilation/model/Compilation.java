@@ -20,7 +20,4 @@ public class Compilation {
     private String title;
     private boolean pinned;
 
-    @JoinColumn(name = "event_id")
-    @ManyToOne
-    private Event event;
 }
