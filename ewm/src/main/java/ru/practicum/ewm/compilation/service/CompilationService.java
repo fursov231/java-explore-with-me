@@ -3,7 +3,6 @@ package ru.practicum.ewm.compilation.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
@@ -55,8 +54,12 @@ public class CompilationService {
         Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
         if (compilationOptional.isPresent()) {
             List<Long> eventId = compilationRepository.findEventIdByCompilationId(compId);
-            List<EventShortDto> events = eventId.stream().map(e -> EventMapper.toShortDto(eventRepository.findById(e)
-                    .get())).collect(Collectors.toList());
+            List<EventShortDto> events = new ArrayList<>();
+            if (!eventId.isEmpty()) {
+                 events = eventId.stream().map(e -> EventMapper.toShortDto(eventRepository.findById(e)
+                        .get())).collect(Collectors.toList());
+            }
+
                 return CompilationDto.builder()
                         .id(compilationOptional.get().getId())
                         .title(compilationOptional.get().getTitle())
@@ -67,29 +70,89 @@ public class CompilationService {
         throw new NotFoundException("Запрошенной подборки не найдено");
     }
 
+    @Transactional
     public CompilationDto addCompilation(long ownerId, NewCompilationDto newCompilationDto) {
         Optional<User> owner = userRepository.findById(ownerId);
         if (owner.isPresent()) {
-            List<Integer> events = newCompilationDto.getEvents();
             Compilation compilation = compilationRepository.save(CompilationMapper.newCompDtoToComp(newCompilationDto));
-            events.forEach(e -> compilationRepository.saveCompilation(compilation.getId(), e));
-            return CompilationMapper.newCompDtoToComp(compilation);
+            CompilationDto result = CompilationMapper.toDto(compilation);
+            List<Long> events = newCompilationDto.getEvents();
+
+            if (!events.isEmpty()) {
+                events.forEach(e -> compilationRepository.saveCompilation(compilation.getId(), e));
+                List<EventShortDto> eventDtos = new ArrayList<>();
+                events.forEach(e -> eventDtos.add(EventMapper.toShortDto(eventRepository.findById(e).get())));
+                result.setEvents(eventDtos);
+            }
+            return result;
         }
         throw new NotFoundException("Указанного пользователя не существует");
     }
 
-    public ResponseEntity<Object> deleteCompilationById(long ownerId, long compId) {
+    @Transactional
+    public void deleteCompilationById(long ownerId, long compId) {
+        Optional<User> owner = userRepository.findById(ownerId);
+        if (owner.isPresent()) {
+            compilationRepository.deleteById(compId);
+        }
+        throw new NotFoundException("Указанного пользователя не существует");
+        }
+
+    @Transactional
+    public void deleteCompilationByIdAndEventId(long ownerId, long compId, long eventId) {
+        Optional<User> owner = userRepository.findById(ownerId);
+        if (owner.isPresent()) {
+            compilationRepository.deleteById(compId);
+            eventRepository.deleteById(eventId);
+        }
+        throw new NotFoundException("Указанного пользователя не существует");
     }
 
-    public ResponseEntity<Object> deleteCompilationByIdAndEventId(long ownerId, long compId, long eventId) {
+
+    public void addEventInCompilation(long ownerId, long compId, long eventId) {
+        Optional<User> owner = userRepository.findById(ownerId);
+        if (owner.isPresent()) {
+            Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
+            Optional<Event> eventOptional = eventRepository.findById(eventId);
+            if (eventOptional.isPresent() && compilationOptional.isPresent()) {
+                compilationRepository.saveCompilation(compId, eventId);
+                return;
+            } else {
+                throw new NotFoundException("Не найден указанный compilationId или eventId");
+            }
+        }
+        throw new NotFoundException("Указанного пользователя не существует");
     }
 
-    public ResponseEntity<Object> addEventInCompilation(long ownerId, long compId, long eventId) {
+    public void unpinCompilationByIdOnMainPage(long ownerId, long compId) {
+        Optional<User> owner = userRepository.findById(ownerId);
+        if (owner.isPresent()) {
+            Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
+            if (compilationOptional.isPresent()) {
+                Compilation targetCompilation = compilationOptional.get();
+                targetCompilation.setPinned(false);
+                compilationRepository.save(targetCompilation);
+                return;
+            } else {
+                throw new NotFoundException("Не найден указанный compilationId");
+            }
+        }
+        throw new NotFoundException("Указанного пользователя не существует");
     }
 
-    public ResponseEntity<Object> unpinCompilationByIdOnMainPage(long ownerId, long compId) {
-    }
-
-    public ResponseEntity<Object> pinCompilationByIdOnMainPage(long ownerId, long compId) {
+    public void pinCompilationByIdOnMainPage(long ownerId, long compId) {
+        Optional<User> owner = userRepository.findById(ownerId);
+        if (owner.isPresent()) {
+            Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
+            if (compilationOptional.isPresent()) {
+                Compilation targetCompilation = compilationOptional.get();
+                targetCompilation.setPinned(true);
+                compilationRepository.save(targetCompilation);
+                return;
+            } else {
+                throw new NotFoundException("Не найден указанный compilationId");
+            }
+        }
+        throw new NotFoundException("Указанного пользователя не существует");
     }
 }

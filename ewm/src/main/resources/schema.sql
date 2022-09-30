@@ -61,10 +61,10 @@ create table if not exists requests
         primary key,
     event_id     bigint      not null
         constraint requests_events_id_fk
-            references events,
+            references events ON DELETE CASCADE,
     requester_id bigint      not null
         constraint requests_users_id_fk
-            references users,
+            references users ON DELETE CASCADE,
     status       varchar(64) not null,
     created      timestamp   not null
 );
