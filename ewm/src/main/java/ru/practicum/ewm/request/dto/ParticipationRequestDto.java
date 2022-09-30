@@ -3,7 +3,7 @@ package ru.practicum.ewm.request.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.ewm.event.model.State;
+import ru.practicum.ewm.request.model.RequestState;
 
 import java.time.LocalDateTime;
 
@@ -15,5 +15,5 @@ public class ParticipationRequestDto {
     Long event;
     LocalDateTime created;
     Long requester;
-    State status; //todo
+    RequestState status; //todo
 }

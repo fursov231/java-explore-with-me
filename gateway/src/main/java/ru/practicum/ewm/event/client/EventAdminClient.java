@@ -28,7 +28,7 @@ public class EventAdminClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> getAllEvents(long ownerId, List<Integer> users, List<String> states,
+    public ResponseEntity<Object> findEventsByAdmin(long ownerId, List<Integer> users, List<String> states,
                                                List<Integer> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
@@ -44,15 +44,15 @@ public class EventAdminClient extends BaseClient {
                 "from={from}&size={size}", ownerId, parameters);
     }
 
-    public ResponseEntity<Object> updateEvent(long ownerId, Integer eventId, NewEventDto newEventDto) {
+    public ResponseEntity<Object> updateEventByAdmin(long ownerId, Integer eventId, NewEventDto newEventDto) {
         return put("/" + eventId, ownerId, newEventDto);
     }
 
-    public ResponseEntity<Object> publishEvent(long ownerId, Integer eventId) {
+    public ResponseEntity<Object> publishEventByAdmin(long ownerId, Integer eventId) {
         return patch("/" + eventId + "/publish", ownerId);
     }
 
-    public ResponseEntity<Object> rejectEvent(long ownerId, Integer eventId) {
+    public ResponseEntity<Object> rejectEventByAdmin(long ownerId, Integer eventId) {
         return patch("/" + eventId + "/reject", ownerId);
     }
 }

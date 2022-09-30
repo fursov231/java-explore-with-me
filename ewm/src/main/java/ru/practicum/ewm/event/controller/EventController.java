@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.client.EventAdminClient;
-import ru.practicum.ewm.event.client.EventPrivateClient;
-import ru.practicum.ewm.event.client.EventPublicClient;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
+import ru.practicum.ewm.event.service.EventService;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -19,9 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class EventController {
-    private final EventAdminClient adminClient;
-    private final EventPrivateClient privateClient;
-    private final EventPublicClient publicClient;
+    private final EventService eventService;
 
     @GetMapping("/events")
     public ResponseEntity<Object> getAllEvents(@RequestParam(name = "text") String text,
@@ -31,66 +27,66 @@ public class EventController {
                                                @RequestParam(name = "rangeEnd") LocalDateTime rangeEnd,
                                                @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                                @RequestParam(name = "sort") String sort,
-                                               @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                               @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return publicClient.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+                                               @RequestParam(name = "from") int from,
+                                               @RequestParam(name = "size") int size) {
+        return eventService.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
     }
 
     @GetMapping("/events/{id}")
     public ResponseEntity<Object> getEventById(@PathVariable long id) {
-        return publicClient.getEventById(id);
+        return eventService.getEventById(id);
     }
 
     @GetMapping("/users/{userId}/events")
     public ResponseEntity<Object> getAllUsersEvents(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                     @PathVariable long userId,
-                                                    @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                                    @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return privateClient.getAllUsersEvents(ownerId, userId, from, size);
+                                                    @PositiveOrZero @RequestParam(name = "from") int from,
+                                                    @Positive @RequestParam(name = "size") int size) {
+        return eventService.getAllUsersEvents(ownerId, userId, from, size);
     }
 
     @PatchMapping("/users/{userId}/events")
     public ResponseEntity<Object> updateUsersEvent(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                    @PathVariable long userId, UpdateEventRequest updateEventRequest) {
-        return privateClient.updateEvent(ownerId, userId, updateEventRequest);
+        return eventService.updateEvent(ownerId, userId, updateEventRequest);
     }
 
     @PostMapping("/users/{userId}/events")
     public ResponseEntity<Object> addUsersEvent(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                 @PathVariable long userId, NewEventDto newEventDto) {
-        return privateClient.addEvent(ownerId, userId, newEventDto);
+        return eventService.addEvent(ownerId, userId, newEventDto);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
     public ResponseEntity<Object> getUsersEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                     @PathVariable long userId, @PathVariable Integer eventId) {
-        return privateClient.getEventById(ownerId, userId, eventId);
+        return eventService.getUsersEventById(ownerId, userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
     public ResponseEntity<Object> cancelUsersEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                        @PathVariable long userId, @PathVariable Integer eventId) {
-        return privateClient.cancelEvent(ownerId, userId, eventId);
+        return eventService.cancelEvent(ownerId, userId, eventId);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}/requests")
     public ResponseEntity<Object> getRequests(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                               @PathVariable long userId, @PathVariable Integer eventId) {
-        return privateClient.getRequests(ownerId, userId, eventId);
+        return eventService.getRequests(ownerId, userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/{reqId}/confirm")
     public ResponseEntity<Object> confirmRequest(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                  @PathVariable long userId, @PathVariable Integer eventId,
                                                  @PathVariable Integer reqId) {
-        return privateClient.confirmRequest(ownerId, userId, eventId, reqId);
+        return eventService.confirmRequest(ownerId, userId, eventId, reqId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/{reqId}/reject")
     public ResponseEntity<Object> rejectRequest(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                 @PathVariable long userId, @PathVariable Integer eventId,
                                                 @PathVariable Integer reqId) {
-        return privateClient.rejectRequest(ownerId, userId, eventId, reqId);
+        return eventService.rejectRequest(ownerId, userId, eventId, reqId);
     }
 
     @GetMapping("/admin/events")
@@ -100,28 +96,28 @@ public class EventController {
                                              @RequestParam List<Integer> categories,
                                              @RequestParam LocalDateTime rangeStart,
                                              @RequestParam LocalDateTime rangeEnd,
-                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                             @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return adminClient.findEventsByAdmin(ownerId, users, states, categories, rangeStart, rangeEnd, from, size);
+                                             @PositiveOrZero @RequestParam(name = "from") int from,
+                                             @Positive @RequestParam(name = "size") int size) {
+        return eventService.findEventsByAdmin(ownerId, users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PutMapping("/admin/events/{eventId}")
     public ResponseEntity<Object> editEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                 @PathVariable Integer eventId,
                                                 @RequestBody NewEventDto newEventDto) {
-        return adminClient.updateEventByAdmin(ownerId, eventId, newEventDto);
+        return eventService.updateEventByAdmin(ownerId, eventId, newEventDto);
     }
 
     @PatchMapping("/admin/events/{eventId}/publish")
     public ResponseEntity<Object> publishEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                    @PathVariable Integer eventId) {
-        return adminClient.publishEventByAdmin(ownerId, eventId);
+        return eventService.publishEventByAdmin(ownerId, eventId);
     }
 
     @PatchMapping("/admin/events/{eventId}/reject")
     public ResponseEntity<Object> rejectEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                                   @PathVariable Integer eventId) {
-        return adminClient.rejectEventByAdmin(ownerId, eventId);
+        return eventService.rejectEventByAdmin(ownerId, eventId);
     }
 
 }

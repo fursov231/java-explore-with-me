@@ -48,11 +48,11 @@ create table if not exists compilations_events
     compilation_id integer not null
         primary key
         constraint compilations_events_compilations_id_fk
-            references compilations,
+            references compilations ON DELETE CASCADE,
     event_id       integer not null
         primary key
         constraint compilations_events_events_id_fk
-            references events
+            references events ON DELETE CASCADE
 );
 
 create table if not exists requests
@@ -61,10 +61,10 @@ create table if not exists requests
         primary key,
     event_id     bigint      not null
         constraint requests_events_id_fk
-            references events ON DELETE CASCADE,
+            references events,
     requester_id bigint      not null
         constraint requests_users_id_fk
-            references users ON DELETE CASCADE,
+            references users,
     status       varchar(64) not null,
     created      timestamp   not null
 );

@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.event.model.Location;
-import ru.practicum.ewm.event.model.State;
+import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
@@ -31,7 +31,7 @@ public class EventFullDto {
     private Integer participantLimit;
     private LocalDateTime publishedOn;
     private boolean requestModeration;
-    private State state;
+    private EventState eventState;
 
 
 }

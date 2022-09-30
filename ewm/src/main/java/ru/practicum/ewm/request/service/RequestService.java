@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.State;
+
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.model.Request;
+import ru.practicum.ewm.request.model.RequestState;
 import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.request.util.RequestMapper;
 import ru.practicum.ewm.user.model.User;
@@ -52,7 +53,7 @@ public class RequestService {
             Optional<Event> event = eventRepository.findById(eventId);
             if (user.isPresent() && event.isPresent()) {
                 Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
-                        .status(State.PENDING).build();
+                        .status(RequestState.PENDING).build();
                 return RequestMapper.toDto(requestRepository.save(request));
             }
         }

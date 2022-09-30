@@ -49,5 +49,5 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    private State state;
+    private EventState eventState;
 }
