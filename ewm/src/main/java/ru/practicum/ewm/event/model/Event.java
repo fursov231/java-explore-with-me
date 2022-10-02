@@ -26,6 +26,7 @@ public class Event {
     @JoinColumn(name = "category_id")
     @ManyToOne
     private Category category;
+
     private String description;
 
     @Column(name = "event_date")
@@ -50,4 +51,6 @@ public class Event {
     private LocalDateTime publishedOn;
 
     private EventState eventState;
+    private Long views;
+    private LocalDateTime created;
 }

@@ -32,27 +32,27 @@ create table if not exists events
         constraint events_users_id_fk
             references users,
     published_on       timestamp    not null,
-    state              varchar(128) not null
+    state              varchar(128) not null,
+    views              bigint not null
 );
 
 create table if not exists compilations
 (
-    id       bigserial
+    id     bigserial
         primary key,
-    title    varchar(128) not null,
-    pinned   boolean      not null
+    title  varchar(128) not null,
+    pinned boolean      not null
 );
 
 create table if not exists compilations_events
 (
     compilation_id integer not null
-        primary key
         constraint compilations_events_compilations_id_fk
             references compilations ON DELETE CASCADE,
     event_id       integer not null
-        primary key
         constraint compilations_events_events_id_fk
-            references events ON DELETE CASCADE
+            references events ON DELETE CASCADE,
+    primary key (compilation_id, event_id)
 );
 
 create table if not exists requests

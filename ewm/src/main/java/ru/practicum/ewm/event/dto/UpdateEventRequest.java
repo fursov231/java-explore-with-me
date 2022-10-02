@@ -3,6 +3,8 @@ package ru.practicum.ewm.event.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.ewm.category.dto.CategoryDto;
+import ru.practicum.ewm.category.model.Category;
 
 import java.time.LocalDateTime;
 
@@ -11,10 +13,10 @@ import java.time.LocalDateTime;
 @Builder
 public class UpdateEventRequest {
     private String annotation;
-    private Integer category;
+    private Long category;
     private String description;
     private LocalDateTime eventDate;
-    private Integer eventId;
+    private Long eventId;
     private boolean paid;
     private Integer participantLimit;
     private String title;

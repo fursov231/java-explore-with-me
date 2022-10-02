@@ -4,7 +4,7 @@ package ru.practicum.ewm.event.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.ewm.event.model.Location;
+import org.springframework.data.geo.Point;
 
 import java.time.LocalDateTime;
 
@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 @Builder
 public class NewEventDto {
     private String annotation;
-    private Integer category;
+    private Long category;
     private String description;
     private LocalDateTime eventDate;
-    private Location location;
+    private Point location;
     private boolean paid;
     private Integer participantLimit;
     private boolean requestModeration;

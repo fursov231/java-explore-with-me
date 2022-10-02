@@ -3,9 +3,9 @@ package ru.practicum.ewm.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-public class InternalServerError extends RuntimeException {
-    public InternalServerError(final String message) {
+@ResponseStatus(HttpStatus.CONFLICT)
+public class ConflictException extends RuntimeException {
+    public ConflictException(final String message) {
         super(message);
     }
 }
