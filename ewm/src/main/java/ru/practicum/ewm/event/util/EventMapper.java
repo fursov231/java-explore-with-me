@@ -43,7 +43,7 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn())
                 .requestModeration(event.isRequestModeration())
-                .state(event.getEventState())
+                .state(event.getState())
                 .build();
     }
 
@@ -84,8 +84,9 @@ public class EventMapper {
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.isRequestModeration())
                 .title(newEventDto.getTitle())
-                .eventState(EventState.PENDING)
+                .state(EventState.PENDING)
                 .views(0L)
+                .isAvailable(true)
                 .created(LocalDateTime.now())
                 .build();
     }

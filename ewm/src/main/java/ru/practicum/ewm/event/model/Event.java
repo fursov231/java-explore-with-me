@@ -50,7 +50,10 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    private EventState eventState;
+    private EventState state;
     private Long views;
     private LocalDateTime created;
+
+    @Column(name = "is_available")
+    private boolean isAvailable;
 }

@@ -33,7 +33,9 @@ create table if not exists events
             references users,
     published_on       timestamp    not null,
     state              varchar(128) not null,
-    views              bigint not null
+    views              bigint not null,
+    created            timestamp not null,
+    is_available          boolean not null
 );
 
 create table if not exists compilations

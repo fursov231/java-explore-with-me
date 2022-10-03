@@ -30,7 +30,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleAuthorizationException(final AuthorizationException e) {
+    public ApiError handleAuthorizationException(final ForbiddenException e) {
         return new ApiError(new ArrayList<>(Collections.singleton(e.getMessage())),
                 "Only pending or canceled events can be changed",
                 "For the requested operation the conditions are not met.",
