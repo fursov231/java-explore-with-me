@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.model.Event;
-
+import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.ewm.exception.ForbiddenException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.model.Request;
 import ru.practicum.ewm.request.model.RequestState;
@@ -48,13 +50,32 @@ public class RequestService {
     @Transactional
     public ParticipationRequestDto addRequest(long ownerId, long userId, long eventId) {
         Optional<User> optionalUser = userRepository.findById(ownerId);
+        Optional<Request> currentRequest = requestRepository.findRequestByEvent_IdAndRequester_Id(eventId, userId);
+        if (currentRequest.isPresent()) {
+            throw new ValidationException("Нельзя добавить повторный запрос");
+        }
+        if (userId == ownerId) {
+            throw new ValidationException("Инициатор события не может добавить запрос на участие в своём событии");
+        }
         if (optionalUser.isPresent()) {
             Optional<User> user = userRepository.findById(userId);
             Optional<Event> event = eventRepository.findById(eventId);
             if (user.isPresent() && event.isPresent()) {
-                Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
-                        .status(RequestState.PENDING).build();
-                return RequestMapper.toDto(requestRepository.save(request));
+                if (event.get().getState().equals(EventState.PUBLISHED)) {
+                    long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
+                            RequestState.CONFIRMED).size();
+                    if (currentNumOfRequests >= event.get().getParticipantLimit()) {
+                        throw new ForbiddenException("Достигнут лимит запросов на участие");
+                    }
+                    Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
+                            .status(RequestState.PENDING).build();
+                    if (!event.get().isRequestModeration()) {
+                        request.setStatus(RequestState.CONFIRMED);
+                    }
+                    return RequestMapper.toDto(requestRepository.save(request));
+                } else {
+                    throw new ForbiddenException("Нельзя участвовать в неопубликованном событии");
+                }
             }
         }
         throw new NotFoundException("Указанный пользователь не найден");
