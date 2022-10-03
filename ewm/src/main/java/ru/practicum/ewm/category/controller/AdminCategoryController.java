@@ -7,38 +7,25 @@ import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.CategoryRequestDto;
 import ru.practicum.ewm.category.service.CategoryService;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
-
-public class CategoryController {
+@RequestMapping("/admin/categories")
+public class AdminCategoryController {
     private final CategoryService categoryService;
 
-    @GetMapping("/categories")
-    public List<CategoryDto> getAllCats(@RequestParam(name = "from") int from,
-                                        @RequestParam(name = "size") int size) {
-        return categoryService.getAllCategories(from, size);
-    }
-
-    @GetMapping("/categories/{catId}")
-    public CategoryDto getCatById(@PathVariable long catId) {
-        return categoryService.getCategoryById(catId);
-    }
-
-    @PatchMapping("/admin/categories")
+    @PatchMapping
     public CategoryDto updateCat(@RequestHeader("X-Sharer-User-Id") long ownerId, CategoryDto categoryDto) {
         return categoryService.updateCategory(ownerId, categoryDto);
     }
 
-    @PostMapping("/admin/categories")
+    @PostMapping
     public CategoryDto addCat(@RequestHeader("X-Sharer-User-Id") long ownerId, CategoryRequestDto categoryRequestDto) {
         return categoryService.addCategory(ownerId, categoryRequestDto);
     }
 
-    @DeleteMapping("/admin/categories/{catId}")
+    @DeleteMapping("/{catId}")
     public ResponseEntity<String> deleteCatById(@RequestHeader("X-Sharer-User-Id") long ownerId, @PathVariable long catId) {
-         categoryService.deleteCategory(ownerId, catId);
-         return ResponseEntity.ok("Категория удалена");
+        categoryService.deleteCategory(ownerId, catId);
+        return ResponseEntity.ok("Категория удалена");
     }
 }
