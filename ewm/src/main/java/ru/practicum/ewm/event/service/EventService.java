@@ -277,7 +277,7 @@ public class EventService {
                     for (String state : states) {
                         for (Long category : categories) {
                             events = eventRepository
-                                    .findAllByInitiator_IdAndEventStateAndCategory_IdAndEventDateBetween(
+                                    .findAllByInitiator_IdAndStateAndCategory_IdAndEventDateBetween(
                                             user, EventState.valueOf(state), category, rangeStart,
                                             rangeEnd, pageRequest);
                         }
