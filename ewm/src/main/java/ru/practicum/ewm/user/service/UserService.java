@@ -12,6 +12,7 @@ import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 import ru.practicum.ewm.user.util.UserMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,17 +21,33 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService {
-
     private final UserRepository userRepository;
 
-    public List<UserDto> getAllUsers(long ownerId, int from, int size) {
-
+    public List<UserDto> getAllUsers(long ownerId, List<Long> ids, int from, int size) {
         Optional<User> userOptional = userRepository.findById(ownerId);
         if (userOptional.isPresent()) {
             PageRequest pageRequest = PageRequest.of(from / size, size);
             Page<User> userPage = userRepository.findAll(pageRequest);
-            return userPage.getContent().stream().map(UserMapper::toDto).collect(Collectors.toList());
-        }
+            List<User> targetUsers = new ArrayList<>();
+            if (!ids.isEmpty()) {
+                for (var id : ids) {
+                    Optional<User> user = userRepository.findById(id);
+                    user.ifPresent(targetUsers::add);
+                }
+            }
+                if (!targetUsers.isEmpty()) {
+                    return userPage.getContent()
+                            .stream()
+                            .filter(targetUsers::contains)
+                            .map(UserMapper::toDto)
+                            .collect(Collectors.toList());
+                } else {
+                    return userPage.getContent()
+                            .stream()
+                            .map(UserMapper::toDto)
+                            .collect(Collectors.toList());
+                }
+            }
         throw new NotFoundException("Указанный пользователь не найден");
     }
 

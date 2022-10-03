@@ -23,6 +23,4 @@ public interface CompilationRepository extends JpaRepository<Compilation, Long> 
     @Query(value = "insert into compilations_events (compilation_id, event_id) VALUES(:compId, :eventId)",
             nativeQuery = true)
     void saveCompilation(long compId, long eventId);
-
-
 }

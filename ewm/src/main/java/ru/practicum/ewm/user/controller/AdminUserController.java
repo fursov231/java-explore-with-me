@@ -11,15 +11,16 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class UserController {
+public class AdminUserController {
     private final UserService userService;
 
     @GetMapping("/admin/users")
     public List<UserDto> getAllUsers(@RequestHeader("X-Sharer-User-Id") long ownerId,
+                                     @RequestParam(name = "ids") List<Long> ids,
                                      @RequestParam(name = "from") int from,
                                    @RequestParam(name = "size") int size) {
 
-        return userService.getAllUsers(ownerId, from, size);
+        return userService.getAllUsers(ownerId, ids, from, size);
     }
 
     @PostMapping("/admin/users")
