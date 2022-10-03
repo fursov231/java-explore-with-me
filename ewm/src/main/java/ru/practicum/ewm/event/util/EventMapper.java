@@ -1,10 +1,7 @@
 package ru.practicum.ewm.event.util;
 
 import ru.practicum.ewm.category.util.CategoryMapper;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
-import ru.practicum.ewm.event.dto.UpdateEventRequest;
+import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.user.util.UserMapper;
@@ -88,6 +85,20 @@ public class EventMapper {
                 .views(0L)
                 .isAvailable(true)
                 .created(LocalDateTime.now())
+                .build();
+    }
+
+    //+ set category, initiator, publishedOn, available, views, created, state
+    public static Event adminDtoToEvent(AdminUpdateEventRequest adminUpdateEventRequest) {
+        return Event.builder()
+                .annotation(adminUpdateEventRequest.getAnnotation())
+                .description(adminUpdateEventRequest.getDescription())
+                .eventDate(adminUpdateEventRequest.getEventDate())
+                .location(adminUpdateEventRequest.getLocation())
+                .paid(adminUpdateEventRequest.isPaid())
+                .participantLimit(adminUpdateEventRequest.getParticipantLimit())
+                .requestModeration(adminUpdateEventRequest.isRequestModeration())
+                .title(adminUpdateEventRequest.getTitle())
                 .build();
     }
 

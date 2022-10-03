@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.SortValue;
-import ru.practicum.ewm.event.service.EventService;
+import ru.practicum.ewm.event.service.EventServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping(path = "/events")
 public class PublicEventController {
-    private final EventService eventService;
+    private final EventServiceImpl eventServiceImpl;
 
     @GetMapping
     public List<EventShortDto> getAllEvents(@RequestParam(name = "text") String text,
@@ -26,11 +26,11 @@ public class PublicEventController {
                                             @RequestParam(name = "sort") String sort,
                                             @RequestParam(name = "from") int from,
                                             @RequestParam(name = "size") int size) {
-        return eventService.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, SortValue.valueOf(sort), from, size);
+        return eventServiceImpl.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, SortValue.valueOf(sort), from, size);
     }
 
     @GetMapping("/{id}")
     public EventFullDto getEventById(@PathVariable long id) {
-        return eventService.getEventById(id);
+        return eventServiceImpl.getEventById(id);
     }
 }

@@ -17,7 +17,7 @@ public class AdminUpdateEventRequest {
     private LocalDateTime eventDate;
     private Point location;
     private boolean paid;
-    private Integer paticipantLimit;
+    private Integer participantLimit;
     private boolean requestModeration;
     private String title;
 }

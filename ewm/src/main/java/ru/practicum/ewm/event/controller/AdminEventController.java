@@ -3,9 +3,9 @@ package ru.practicum.ewm.event.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ewm.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
-import ru.practicum.ewm.event.service.EventService;
+import ru.practicum.ewm.event.service.EventServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping(path = "/admin/events")
 @Validated
 public class AdminEventController {
-    private final EventService eventService;
+    private final EventServiceImpl eventServiceImpl;
 
     @GetMapping
     public List<EventFullDto> findEvents(@RequestHeader("X-Sharer-User-Id") long ownerId,
@@ -26,25 +26,25 @@ public class AdminEventController {
                                              @RequestParam LocalDateTime rangeEnd,
                                              @RequestParam(name = "from") int from,
                                              @RequestParam(name = "size") int size) {
-        return eventService.findEventsByAdmin(ownerId, users, states, categories, rangeStart, rangeEnd, from, size);
+        return eventServiceImpl.findEventsByAdmin(ownerId, users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PutMapping("/{eventId}")
-    public NewEventDto editEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
+    public EventFullDto editEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                      @PathVariable long eventId,
-                                     @RequestBody NewEventDto newEventDto) {
-        return eventService.updateEventByAdmin(ownerId, eventId, newEventDto);
+                                     @RequestBody AdminUpdateEventRequest adminUpdateEventRequest) {
+        return eventServiceImpl.updateEventByAdmin(ownerId, eventId, adminUpdateEventRequest);
     }
 
     @PatchMapping("/{eventId}/publish")
     public EventFullDto publishEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                          @PathVariable long eventId) {
-        return eventService.publishEventByAdmin(ownerId, eventId);
+        return eventServiceImpl.publishEventByAdmin(ownerId, eventId);
     }
 
     @PatchMapping("/{eventId}/reject")
     public EventFullDto rejectEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
                                         @PathVariable long eventId) {
-        return eventService.rejectEventByAdmin(ownerId, eventId);
+        return eventServiceImpl.rejectEventByAdmin(ownerId, eventId);
     }
 }
