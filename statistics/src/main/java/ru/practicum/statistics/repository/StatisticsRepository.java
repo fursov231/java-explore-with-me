@@ -13,6 +13,11 @@ public interface StatisticsRepository extends JpaRepository<Stat, Long> {
     List<Stat> findAllByTimestampBetweenAndUri(LocalDateTime start, LocalDateTime end, String uri);
 
 
-    @Query("select s from Stat s where s.timestamp > :start and s.timestamp  < :end and s.uri like :uri group by s.uri")
+    @Query("select s " +
+            "from Stat s " +
+            "where s.timestamp > :start " +
+            "and s.timestamp  < :end " +
+            "and s.uri like :uri " +
+            "group by s.uri")
     List<Stat> findAllByTimestampBetweenAndUriUnique(LocalDateTime start, LocalDateTime end, String uri);
 }

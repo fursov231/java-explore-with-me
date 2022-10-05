@@ -29,19 +29,21 @@ public class StatisticsService {
             if (!unique) {
                 for (var uri : uris) {
                     stats.addAll(statisticsRepository.findAllByTimestampBetweenAndUri(start, end, uri));
-                    List<ViewStats> viewStats = stats.stream().map(StatisticsMapper::toViewStats).collect(Collectors.toList());
-                    viewStats.forEach(e -> e.setHits((long) stats.size()));
-                    result.addAll(viewStats);
+                    result = toViewStats(stats);
                 }
             } else {
                 for (var uri : uris) {
                     stats.addAll(statisticsRepository.findAllByTimestampBetweenAndUriUnique(start, end, uri));
-                    List<ViewStats> viewStats = stats.stream().map(StatisticsMapper::toViewStats).collect(Collectors.toList());
-                    viewStats.forEach(e -> e.setHits((long) stats.size()));
-                    result.addAll(viewStats);
+                    result = toViewStats(stats);
                 }
             }
         }
         return result;
+    }
+
+    private List<ViewStats> toViewStats(List<Stat> stats) {
+        List<ViewStats> viewStats = stats.stream().map(StatisticsMapper::toViewStats).collect(Collectors.toList());
+        viewStats.forEach(e -> e.setHits((long) stats.size()));
+        return new ArrayList<>(viewStats);
     }
 }
