@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class AdminUserController {
+public class UserController {
     private final UserService userService;
 
     @GetMapping("/admin/users")
@@ -26,7 +26,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/admin/users")
-    public UserDto addUser(NewUserRequest newUserRequest) {
+    public UserDto addUser(@RequestBody NewUserRequest newUserRequest) {
         return userService.addUser(newUserRequest);
     }
 

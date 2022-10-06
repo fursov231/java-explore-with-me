@@ -1,11 +1,11 @@
 package ru.practicum.ewm.event.model;
 
 import lombok.*;
-import org.springframework.data.geo.Point;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.user.model.User;
 
 import javax.persistence.*;
+import java.awt.*;
 import java.time.LocalDateTime;
 
 @Getter
