@@ -10,15 +10,15 @@ public interface CompilationService {
 
     CompilationDto getCompilationById(long compId);
 
-    CompilationDto addCompilation(long ownerId, NewCompilationDto newCompilationDto);
+    CompilationDto addCompilation(NewCompilationDto newCompilationDto);
 
-    void deleteCompilationById(long ownerId, long compId);
+    void deleteCompilationById(long compId);
 
-    void deleteCompilationByIdAndEventId(long ownerId, long compId, long eventId);
+    void deleteCompilationByIdAndEventId(long compId, long eventId);
 
-    void addEventInCompilation(long ownerId, long compId, long eventId);
+    void addEventInCompilation(long compId, long eventId);
 
-    void unpinCompilationByIdOnMainPage(long ownerId, long compId);
+    void unpinCompilationByIdOnMainPage(long compId);
 
-    void pinCompilationByIdOnMainPage(long ownerId, long compId);
+    void pinCompilationByIdOnMainPage(long compId);
 }

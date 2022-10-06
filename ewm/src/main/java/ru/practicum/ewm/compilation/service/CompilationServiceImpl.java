@@ -6,16 +6,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
 import ru.practicum.ewm.compilation.util.CompilationMapper;
+import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.event.util.EventMapper;
 import ru.practicum.ewm.exception.NotFoundException;
-import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.util.ArrayList;
@@ -71,9 +70,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Transactional
-    public CompilationDto addCompilation(long ownerId, NewCompilationDto newCompilationDto) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
             Compilation compilation = compilationRepository.save(CompilationMapper.newCompDtoToComp(newCompilationDto));
             CompilationDto result = CompilationMapper.toDto(compilation);
             List<Long> events = newCompilationDto.getEvents();
@@ -85,34 +82,22 @@ public class CompilationServiceImpl implements CompilationService {
                 result.setEvents(eventDtos);
             }
             return result;
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
     }
 
     @Transactional
-    public void deleteCompilationById(long ownerId, long compId) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public void deleteCompilationById(long compId) {
             compilationRepository.deleteById(compId);
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
         }
 
     @Transactional
-    public void deleteCompilationByIdAndEventId(long ownerId, long compId, long eventId) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public void deleteCompilationByIdAndEventId(long compId, long eventId) {
             compilationRepository.deleteById(compId);
             eventRepository.deleteById(eventId);
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
     }
 
 
     @Transactional
-    public void addEventInCompilation(long ownerId, long compId, long eventId) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public void addEventInCompilation(long compId, long eventId) {
             Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
             Optional<Event> eventOptional = eventRepository.findById(eventId);
             if (eventOptional.isPresent() && compilationOptional.isPresent()) {
@@ -121,41 +106,29 @@ public class CompilationServiceImpl implements CompilationService {
             } else {
                 throw new NotFoundException("Не найден указанный compilationId или eventId");
             }
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
     }
 
     @Transactional
-    public void unpinCompilationByIdOnMainPage(long ownerId, long compId) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public void unpinCompilationByIdOnMainPage(long compId) {
             Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
             if (compilationOptional.isPresent()) {
                 Compilation targetCompilation = compilationOptional.get();
                 targetCompilation.setPinned(false);
                 compilationRepository.save(targetCompilation);
-                return;
             } else {
                 throw new NotFoundException("Не найден указанный compilationId");
             }
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
     }
 
     @Transactional
-    public void pinCompilationByIdOnMainPage(long ownerId, long compId) {
-        Optional<User> owner = userRepository.findById(ownerId);
-        if (owner.isPresent()) {
+    public void pinCompilationByIdOnMainPage(long compId) {
             Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
             if (compilationOptional.isPresent()) {
                 Compilation targetCompilation = compilationOptional.get();
                 targetCompilation.setPinned(true);
                 compilationRepository.save(targetCompilation);
-                return;
             } else {
                 throw new NotFoundException("Не найден указанный compilationId");
             }
-        }
-        throw new NotFoundException("Указанного пользователя не существует");
     }
 }

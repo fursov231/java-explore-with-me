@@ -25,69 +25,58 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class RequestServiceImpl {
+public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public List<ParticipationRequestDto> getAllRequests(long ownerId, long userId) {
+    public List<ParticipationRequestDto> getAllRequests(long userId) {
         List<ParticipationRequestDto> result = new ArrayList<>();
-        Optional<User> optionalUser = userRepository.findById(ownerId);
-        if (optionalUser.isPresent()) {
-            List<Request> requests = requestRepository.findAllById(userId);
-            for (var request : requests) {
-                Optional<Event> event = eventRepository.findById(request.getEvent().getId());
-                Optional<User> user = userRepository.findById(request.getRequester().getId());
-                if (event.isPresent() && user.isPresent()) {
-                    result.add(RequestMapper.toDto(request));
-                }
+        List<Request> requests = requestRepository.findAllById(userId);
+        for (var request : requests) {
+            Optional<Event> event = eventRepository.findById(request.getEvent().getId());
+            Optional<User> user = userRepository.findById(request.getRequester().getId());
+            if (event.isPresent() && user.isPresent()) {
+                result.add(RequestMapper.toDto(request));
             }
-            return result;
         }
-        throw new NotFoundException("Указанный пользователь не найден");
+        return result;
     }
 
     @Transactional
-    public ParticipationRequestDto addRequest(long ownerId, long userId, long eventId) {
-        Optional<User> optionalUser = userRepository.findById(ownerId);
+    public ParticipationRequestDto addRequest(long userId, long eventId) {
         Optional<Request> currentRequest = requestRepository.findRequestByEvent_IdAndRequester_Id(eventId, userId);
         if (currentRequest.isPresent()) {
             throw new ValidationException("Нельзя добавить повторный запрос");
         }
-        if (userId == ownerId) {
-            throw new ValidationException("Инициатор события не может добавить запрос на участие в своём событии");
-        }
-        if (optionalUser.isPresent()) {
-            Optional<User> user = userRepository.findById(userId);
-            Optional<Event> event = eventRepository.findById(eventId);
-            if (user.isPresent() && event.isPresent()) {
-                if (event.get().getState().equals(EventState.PUBLISHED)) {
-                    long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                            RequestState.CONFIRMED).size();
-                    if (currentNumOfRequests >= event.get().getParticipantLimit()) {
-                        throw new ForbiddenException("Достигнут лимит запросов на участие");
-                    }
-                    Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
-                            .status(RequestState.PENDING).build();
-                    if (!event.get().isRequestModeration()) {
-                        request.setStatus(RequestState.CONFIRMED);
-                    }
-                    return RequestMapper.toDto(requestRepository.save(request));
-                } else {
-                    throw new ForbiddenException("Нельзя участвовать в неопубликованном событии");
+        Optional<User> user = userRepository.findById(userId);
+        Optional<Event> event = eventRepository.findById(eventId);
+        if (user.isPresent() && event.isPresent()) {
+            if (userId == event.get().getInitiator().getId()) {
+                throw new ValidationException("Инициатор события не может добавить запрос на участие в своём событии");
+            }
+            if (event.get().getState().equals(EventState.PUBLISHED)) {
+                long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
+                        RequestState.CONFIRMED).size();
+                if (currentNumOfRequests >= event.get().getParticipantLimit()) {
+                    throw new ForbiddenException("Достигнут лимит запросов на участие");
                 }
+                Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
+                        .status(RequestState.PENDING).build();
+                if (!event.get().isRequestModeration()) {
+                    request.setStatus(RequestState.CONFIRMED);
+                }
+                return RequestMapper.toDto(requestRepository.save(request));
+            } else {
+                throw new ForbiddenException("Нельзя участвовать в неопубликованном событии");
             }
         }
-        throw new NotFoundException("Указанный пользователь не найден");
+        throw new NotFoundException("Указанного userId или eventId не найдено");
     }
 
     @Transactional
-    public void cancelRequest(long ownerId, long userId, long requestId) {
-        Optional<User> optionalUser = userRepository.findById(ownerId);
-        if (optionalUser.isPresent()) {
-            Optional<User> user = userRepository.findById(userId);
-            user.ifPresent(value -> requestRepository.deleteByRequesterAndId(value, requestId));
-        }
-        throw new NotFoundException("Указанный пользователь не найден");
+    public void cancelRequest(long userId, long requestId) {
+        Optional<User> user = userRepository.findById(userId);
+        user.ifPresent(value -> requestRepository.deleteByRequesterAndId(value, requestId));
     }
 }

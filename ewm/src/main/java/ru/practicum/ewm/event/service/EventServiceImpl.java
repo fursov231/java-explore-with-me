@@ -72,10 +72,9 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public List<EventShortDto> getAllUsersEvents(long ownerId, long userId, int from, int size) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public List<EventShortDto> getAllUsersEvents(long userId, int from, int size) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             PageRequest pageRequest = PageRequest.of(from / size, size);
             List<Event> events = eventRepository.findAllByInitiator(optionalTargetUser.get(), pageRequest);
             List<EventShortDto> shortDtos = events.stream().map(EventMapper::toShortDto).collect(Collectors.toList());
@@ -83,17 +82,17 @@ public class EventServiceImpl implements EventService {
                     RequestState.CONFIRMED).size()));
             return shortDtos;
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
     @Transactional
-    public UpdateEventRequest updateEvent(long ownerId, long userId, UpdateEventRequest updateEventRequest) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public UpdateEventRequest updateEvent(long userId, UpdateEventRequest updateEventRequest) {
+
         Optional<User> optionalTargetUser = userRepository.findById(userId);
 
         if (LocalDateTime.now().isBefore(updateEventRequest.getEventDate().minusHours(2))) {
-            if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+            if (optionalTargetUser.isPresent()) {
                 Optional<Event> targetEvent = eventRepository.findById(updateEventRequest.getEventId());
                 if (targetEvent.isPresent()) {
                     if (!targetEvent.get().getState().equals(EventState.PENDING)
@@ -113,7 +112,7 @@ public class EventServiceImpl implements EventService {
                     throw new NotFoundException("Указанный Event не найден");
                 }
             } else {
-                throw new NotFoundException("Указанный ownerId или userId не найден");
+                throw new NotFoundException("Указанный userId не найден");
             }
         } else {
             throw new ValidationException("Время события не может быть раньше чем за 2 часа от текущего момента");
@@ -121,29 +120,27 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public NewEventDto addEvent(long ownerId, long userId, NewEventDto newEventDto) {
+    public NewEventDto addEvent(long userId, NewEventDto newEventDto) {
         if (LocalDateTime.now().isBefore(newEventDto.getEventDate().minusHours(2))) {
-            Optional<User> optionalOwner = userRepository.findById(ownerId);
             Optional<User> optionalTargetUser = userRepository.findById(userId);
             Optional<Category> optionalCategory = categoryRepository.findById(newEventDto.getCategory());
-            if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+            if (optionalTargetUser.isPresent()) {
                 Event event = EventMapper.newDtoToEvent(newEventDto);
                 event.setInitiator(optionalTargetUser.get());
                 optionalCategory.ifPresent(event::setCategory);
                 Event savedEvent = eventRepository.save(event);
                 return EventMapper.toNewDtoFromEvent(savedEvent);
             } else {
-                throw new NotFoundException("Указанный ownerId или userId не найден");
+                throw new NotFoundException("Указанный userId не найден");
             }
         } else {
             throw new ValidationException("Время события не может быть раньше чем за 2 часа от текущего момента");
         }
     }
 
-    public EventFullDto getUsersEventById(long ownerId, long userId, long eventId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public EventFullDto getUsersEventById(long userId, long eventId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
             if (event.isPresent()) {
                 EventFullDto result = EventMapper.toFullDto(event.get());
@@ -154,15 +151,14 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Указанный event не найден");
             }
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
     @Transactional
-    public EventFullDto cancelEvent(long ownerId, long userId, long eventId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public EventFullDto cancelEvent(long userId, long eventId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
             if (event.isPresent()) {
                 if (event.get().getInitiator().getId() == userId) {
@@ -183,14 +179,13 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Указанный event не найден");
             }
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
-    public List<ParticipationRequestDto> getRequests(long ownerId, long userId, long eventId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public List<ParticipationRequestDto> getRequests(long userId, long eventId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findById(eventId);
             if (event.isPresent()) {
                 List<Request> requests = requestRepository.findRequestsByEvent_IdAndRequester_Id(eventId, userId);
@@ -199,15 +194,14 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Указанный eventId не найден");
             }
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
     @Transactional
-    public ParticipationRequestDto confirmRequest(long ownerId, long userId, long eventId, long reqId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public ParticipationRequestDto confirmRequest(long userId, long eventId, long reqId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             Optional<Event> optionalEvent = eventRepository.findById(eventId);
             Optional<Request> optionalRequest = requestRepository.findById(reqId);
             if (optionalEvent.isPresent() && optionalRequest.isPresent()) {
@@ -232,15 +226,14 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Не найдено по указанному eventId или requesterId");
             }
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
     @Transactional
-    public ParticipationRequestDto rejectRequest(long ownerId, long userId, long eventId, long reqId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
+    public ParticipationRequestDto rejectRequest(long userId, long eventId, long reqId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-        if (optionalOwner.isPresent() && optionalTargetUser.isPresent()) {
+        if (optionalTargetUser.isPresent()) {
             Optional<Event> optionalEvent = eventRepository.findById(eventId);
             Optional<Request> optionalRequest = requestRepository.findById(reqId);
             if (optionalEvent.isPresent() && optionalRequest.isPresent()) {
@@ -257,17 +250,15 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Не найдено по указанному eventId или requesterId");
             }
         } else {
-            throw new NotFoundException("Указанный ownerId или userId не найден");
+            throw new NotFoundException("Указанный userId не найден");
         }
     }
 
-    public List<EventFullDto> findEventsByAdmin(long ownerId, List<Long> users, List<String> states,
+    public List<EventFullDto> findEventsByAdmin(List<Long> users, List<String> states,
                                                 List<Long> categories, LocalDateTime rangeStart,
                                                 LocalDateTime rangeEnd, int from, int size) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<EventFullDto> result = new ArrayList<>();
-        if (optionalOwner.isPresent()) {
             List<Event> events = new ArrayList<>();
             if (!users.isEmpty() && !states.isEmpty() && !categories.isEmpty()) {
                 for (Long user : users) {
@@ -285,15 +276,10 @@ public class EventServiceImpl implements EventService {
                         RequestState.CONFIRMED).size()));
             }
             return result;
-        } else {
-            throw new NotFoundException("Указанный ownerId не найден");
-        }
     }
 
     @Transactional
-    public EventFullDto updateEventByAdmin(long ownerId, long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
-        if (optionalOwner.isPresent()) {
+    public EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
             Optional<Event> targetEvent = eventRepository.findById(eventId);
             if (targetEvent.isPresent()) {
                 Event event = EventMapper.adminDtoToEvent(adminUpdateEventRequest);
@@ -312,16 +298,10 @@ public class EventServiceImpl implements EventService {
             } else {
                 throw new NotFoundException("Event не найден");
             }
-        } else {
-            throw new NotFoundException("Указанный ownerId не найден");
-        }
-
     }
 
     @Transactional
-    public EventFullDto publishEventByAdmin(long ownerId, long eventId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
-        if (optionalOwner.isPresent()) {
+    public EventFullDto publishEventByAdmin(long eventId) {
             Optional<Event> targetEvent = eventRepository.findById(eventId);
             if (targetEvent.isPresent()) {
                 if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
@@ -339,15 +319,10 @@ public class EventServiceImpl implements EventService {
             } else {
                 throw new NotFoundException("Event не найден");
             }
-        } else {
-            throw new NotFoundException("Указанный ownerId не найден");
-        }
     }
 
     @Transactional
-    public EventFullDto rejectEventByAdmin(long ownerId, long eventId) {
-        Optional<User> optionalOwner = userRepository.findById(ownerId);
-        if (optionalOwner.isPresent()) {
+    public EventFullDto rejectEventByAdmin(long eventId) {
             Optional<Event> targetEvent = eventRepository.findById(eventId);
             if (targetEvent.isPresent()) {
                 if (targetEvent.get().getState().equals(EventState.PENDING)) {
@@ -359,8 +334,5 @@ public class EventServiceImpl implements EventService {
             } else {
                 throw new NotFoundException("Event не найден");
             }
-        } else {
-            throw new NotFoundException("Указанный ownerId не найден");
-        }
     }
 }

@@ -13,29 +13,29 @@ public interface EventService {
 
     EventFullDto getEventById(long id);
 
-    List<EventShortDto> getAllUsersEvents(long ownerId, long userId, int from, int size);
+    List<EventShortDto> getAllUsersEvents(long userId, int from, int size);
 
-    UpdateEventRequest updateEvent(long ownerId, long userId, UpdateEventRequest updateEventRequest);
+    UpdateEventRequest updateEvent(long userId, UpdateEventRequest updateEventRequest);
 
-    NewEventDto addEvent(long ownerId, long userId, NewEventDto newEventDto);
+    NewEventDto addEvent(long userId, NewEventDto newEventDto);
 
-    EventFullDto getUsersEventById(long ownerId, long userId, long eventId);
+    EventFullDto getUsersEventById(long userId, long eventId);
 
-    EventFullDto cancelEvent(long ownerId, long userId, long eventId);
+    EventFullDto cancelEvent(long userId, long eventId);
 
-    List<ParticipationRequestDto> getRequests(long ownerId, long userId, long eventId);
+    List<ParticipationRequestDto> getRequests(long userId, long eventId);
 
-    ParticipationRequestDto confirmRequest(long ownerId, long userId, long eventId, long reqId);
+    ParticipationRequestDto confirmRequest(long userId, long eventId, long reqId);
 
-    ParticipationRequestDto rejectRequest(long ownerId, long userId, long eventId, long reqId);
+    ParticipationRequestDto rejectRequest(long userId, long eventId, long reqId);
 
-    List<EventFullDto> findEventsByAdmin(long ownerId, List<Long> users, List<String> states,
+    List<EventFullDto> findEventsByAdmin(List<Long> users, List<String> states,
                                          List<Long> categories, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, int from, int size);
 
-    EventFullDto updateEventByAdmin(long ownerId, long eventId, AdminUpdateEventRequest adminUpdateEventRequest);
+    EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest);
 
-    EventFullDto publishEventByAdmin(long ownerId, long eventId);
+    EventFullDto publishEventByAdmin(long eventId);
 
-    EventFullDto rejectEventByAdmin(long ownerId, long eventId);
+    EventFullDto rejectEventByAdmin(long eventId);
 }

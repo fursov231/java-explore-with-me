@@ -1,7 +1,7 @@
 package ru.practicum.ewm.category.util;
 
 import ru.practicum.ewm.category.dto.CategoryDto;
-import ru.practicum.ewm.category.dto.CategoryRequestDto;
+import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.model.Category;
 
 public class CategoryMapper {
@@ -19,9 +19,9 @@ public class CategoryMapper {
                 .build();
     }
 
-    public static Category requestDtoToCategory(CategoryRequestDto categoryRequestDto) {
+    public static Category requestDtoToCategory(NewCategoryDto newCategoryDto) {
         return Category.builder()
-                .name(categoryRequestDto.getName())
+                .name(newCategoryDto.getName())
                 .build();
     }
 
