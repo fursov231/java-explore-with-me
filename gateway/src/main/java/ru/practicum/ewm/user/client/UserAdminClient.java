@@ -17,7 +17,7 @@ public class UserAdminClient extends BaseClient {
     private static final String API_ADMIN_PREFIX = "/admin/users";
 
     @Autowired
-    public UserAdminClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public UserAdminClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_ADMIN_PREFIX))

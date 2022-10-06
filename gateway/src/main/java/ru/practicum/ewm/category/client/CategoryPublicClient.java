@@ -16,7 +16,7 @@ public class CategoryPublicClient extends BaseClient {
     private static final String API_PUBLIC_PREFIX = "/public/categories";
 
     @Autowired
-    public CategoryPublicClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public CategoryPublicClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PUBLIC_PREFIX))

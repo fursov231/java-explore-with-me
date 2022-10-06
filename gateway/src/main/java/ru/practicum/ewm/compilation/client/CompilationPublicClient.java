@@ -16,7 +16,7 @@ public class CompilationPublicClient extends BaseClient {
     private static final String API_PUBLIC_PREFIX = "/compilations";
 
     @Autowired
-    public CompilationPublicClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public CompilationPublicClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PUBLIC_PREFIX))

@@ -18,7 +18,7 @@ public class EventPrivateClient extends BaseClient {
     private static final String API_PRIVATE_PREFIX = "/users";
 
     @Autowired
-    public EventPrivateClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public EventPrivateClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PRIVATE_PREFIX))

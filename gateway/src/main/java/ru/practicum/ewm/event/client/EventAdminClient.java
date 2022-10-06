@@ -19,7 +19,7 @@ public class EventAdminClient extends BaseClient {
     private static final String API_ADMIN_PREFIX = "/admin/events";
 
     @Autowired
-    public EventAdminClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public EventAdminClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_ADMIN_PREFIX))

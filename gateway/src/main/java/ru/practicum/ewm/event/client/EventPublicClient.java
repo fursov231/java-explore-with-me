@@ -18,7 +18,7 @@ public class EventPublicClient extends BaseClient {
     private static final String API_PUBLIC_PREFIX = "/public/events";
 
     @Autowired
-    public EventPublicClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public EventPublicClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PUBLIC_PREFIX))

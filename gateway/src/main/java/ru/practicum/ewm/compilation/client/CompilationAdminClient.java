@@ -15,7 +15,7 @@ public class CompilationAdminClient extends BaseClient {
     private static final String API_ADMIN_PREFIX = "/admin/compilations";
 
     @Autowired
-    public CompilationAdminClient(@Value("${ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public CompilationAdminClient(@Value("$ {ewm-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_ADMIN_PREFIX))

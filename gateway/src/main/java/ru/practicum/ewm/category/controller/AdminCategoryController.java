@@ -5,30 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.client.CategoryAdminClient;
-import ru.practicum.ewm.category.client.CategoryPublicClient;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.CategoryRequestDto;
-
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class CategoryController {
-    private final CategoryPublicClient publicClient;
+public class AdminCategoryController {
     private final CategoryAdminClient adminClient;
-
-    @GetMapping("/categories")
-    public ResponseEntity<Object> getAllCats(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                              @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return publicClient.getAllCategories(from, size);
-    }
-
-    @GetMapping("/categories/{catId}")
-    public ResponseEntity<Object> getCatById(@PathVariable long catId) {
-        return publicClient.getCategoryById(catId);
-    }
 
     @PatchMapping("/admin/categories")
     public ResponseEntity<Object> updateCat(@RequestHeader("X-Sharer-User-Id") long ownerId, CategoryDto categoryDto) {

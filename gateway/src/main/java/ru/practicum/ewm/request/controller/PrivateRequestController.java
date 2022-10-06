@@ -7,7 +7,7 @@ import ru.practicum.ewm.request.client.RequestPrivateClient;
 
 @RestController
 @RequiredArgsConstructor
-public class RequestController {
+public class PrivateRequestController {
     private final RequestPrivateClient privateClient;
 
     @GetMapping("/users/{userId}/requests")

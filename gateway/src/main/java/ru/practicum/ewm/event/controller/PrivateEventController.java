@@ -4,42 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.client.EventAdminClient;
 import ru.practicum.ewm.event.client.EventPrivateClient;
-import ru.practicum.ewm.event.client.EventPublicClient;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class EventController {
-    private final EventAdminClient adminClient;
+public class PrivateEventController {
     private final EventPrivateClient privateClient;
-    private final EventPublicClient publicClient;
-
-    @GetMapping("/events")
-    public ResponseEntity<Object> getAllEvents(@RequestParam(name = "text") String text,
-                                               @RequestParam(name = "categories") List<Integer> categories,
-                                               @RequestParam(name = "paid") boolean paid,
-                                               @RequestParam(name = "rangeStart") LocalDateTime rangeStart,
-                                               @RequestParam(name = "rangeEnd") LocalDateTime rangeEnd,
-                                               @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
-                                               @RequestParam(name = "sort") String sort,
-                                               @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                               @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return publicClient.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
-    }
-
-    @GetMapping("/events/{id}")
-    public ResponseEntity<Object> getEventById(@PathVariable long id) {
-        return publicClient.getEventById(id);
-    }
 
     @GetMapping("/users/{userId}/events")
     public ResponseEntity<Object> getAllUsersEvents(@RequestHeader("X-Sharer-User-Id") long ownerId,
@@ -92,36 +68,4 @@ public class EventController {
                                                 @PathVariable Integer reqId) {
         return privateClient.rejectRequest(ownerId, userId, eventId, reqId);
     }
-
-    @GetMapping("/admin/events")
-    public ResponseEntity<Object> findEvents(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                             @RequestParam List<Integer> users,
-                                             @RequestParam List<String> states,
-                                             @RequestParam List<Integer> categories,
-                                             @RequestParam LocalDateTime rangeStart,
-                                             @RequestParam LocalDateTime rangeEnd,
-                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                             @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return adminClient.findEventsByAdmin(ownerId, users, states, categories, rangeStart, rangeEnd, from, size);
-    }
-
-    @PutMapping("/admin/events/{eventId}")
-    public ResponseEntity<Object> editEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                @PathVariable Integer eventId,
-                                                @RequestBody NewEventDto newEventDto) {
-        return adminClient.updateEventByAdmin(ownerId, eventId, newEventDto);
-    }
-
-    @PatchMapping("/admin/events/{eventId}/publish")
-    public ResponseEntity<Object> publishEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                   @PathVariable Integer eventId) {
-        return adminClient.publishEventByAdmin(ownerId, eventId);
-    }
-
-    @PatchMapping("/admin/events/{eventId}/reject")
-    public ResponseEntity<Object> rejectEventById(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                  @PathVariable Integer eventId) {
-        return adminClient.rejectEventByAdmin(ownerId, eventId);
-    }
-
 }

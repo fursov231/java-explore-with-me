@@ -13,7 +13,7 @@ import javax.validation.constraints.PositiveOrZero;
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class UserController {
+public class AdminUserController {
     private final UserAdminClient adminClient;
 
     @GetMapping("/admin/users")
