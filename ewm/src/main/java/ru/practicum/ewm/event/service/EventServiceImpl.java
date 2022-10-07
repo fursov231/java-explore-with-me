@@ -9,9 +9,12 @@ import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
+import ru.practicum.ewm.event.model.Location;
 import ru.practicum.ewm.event.model.SortValue;
 import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.ewm.event.repository.LocationRepository;
 import ru.practicum.ewm.event.util.EventMapper;
+import ru.practicum.ewm.event.util.LocationMapper;
 import ru.practicum.ewm.exception.ForbiddenException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
@@ -38,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
+    private final LocationRepository locationRepository;
 
     //todo сервис статистики
     public List<EventShortDto> getAllEvents(String text, List<Integer> categories, boolean paid, LocalDateTime rangeStart,
@@ -66,6 +70,8 @@ public class EventServiceImpl implements EventService {
             eventFullDto.setConfirmedRequests(
                     requestRepository.findRequestsByEvent_IdAndStatus(eventFullDto.getId(), RequestState.CONFIRMED).size()
             );
+            Optional<Location> location = locationRepository.findById(event.get().getLocationId());
+            location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
             return eventFullDto;
         } else {
             throw new NotFoundException("Указанный EventId не найден");
@@ -126,10 +132,14 @@ public class EventServiceImpl implements EventService {
             Optional<Category> optionalCategory = categoryRepository.findById(newEventDto.getCategory());
             if (optionalTargetUser.isPresent()) {
                 Event event = EventMapper.newDtoToEvent(newEventDto);
+                Location location = locationRepository.save(LocationMapper.toLocation(newEventDto.getLocation()));
+                event.setLocationId(location.getId());
                 event.setInitiator(optionalTargetUser.get());
                 optionalCategory.ifPresent(event::setCategory);
                 Event savedEvent = eventRepository.save(event);
-                return EventMapper.toNewDtoFromEvent(savedEvent);
+                NewEventDto result = EventMapper.toNewDtoFromEvent(savedEvent);
+                result.setLocation(LocationMapper.toDto(location));
+                return result;
             } else {
                 throw new NotFoundException("Указанный userId не найден");
             }
@@ -146,6 +156,8 @@ public class EventServiceImpl implements EventService {
                 EventFullDto result = EventMapper.toFullDto(event.get());
                 result.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(result.getId(),
                         RequestState.CONFIRMED).size());
+                Optional<Location> location = locationRepository.findById(event.get().getLocationId());
+                location.ifPresent(e -> result.setLocation(LocationMapper.toDto(e)));
                 return result;
             } else {
                 throw new NotFoundException("Указанный event не найден");
@@ -167,6 +179,8 @@ public class EventServiceImpl implements EventService {
                         removableEvent
                                 .setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(removableEvent.getId(),
                                         RequestState.CONFIRMED).size());
+                        Optional<Location> location = locationRepository.findById(event.get().getLocationId());
+                        location.ifPresent(e -> removableEvent.setLocation(LocationMapper.toDto(e)));
                         eventRepository.deleteById(eventId);
                         return removableEvent;
                     } else {
@@ -258,81 +272,96 @@ public class EventServiceImpl implements EventService {
                                                 List<Long> categories, LocalDateTime rangeStart,
                                                 LocalDateTime rangeEnd, int from, int size) {
         PageRequest pageRequest = PageRequest.of(from / size, size);
+
+        List<Event> events = new ArrayList<>();
         List<EventFullDto> result = new ArrayList<>();
-            List<Event> events = new ArrayList<>();
-            if (!users.isEmpty() && !states.isEmpty() && !categories.isEmpty()) {
-                for (Long user : users) {
-                    for (String state : states) {
-                        for (Long category : categories) {
-                            events = eventRepository
-                                    .findAllByInitiator_IdAndStateAndCategory_IdAndEventDateBetween(
-                                            user, EventState.valueOf(state), category, rangeStart,
-                                            rangeEnd, pageRequest);
-                        }
+        if (!users.isEmpty() && !states.isEmpty() && !categories.isEmpty()) {
+            for (Long user : users) {
+                for (String state : states) {
+                    for (Long category : categories) {
+                        events = eventRepository
+                                .findAllByInitiator_IdAndStateAndCategory_IdAndEventDateBetween(
+                                        user, EventState.valueOf(state), category, rangeStart,
+                                        rangeEnd, pageRequest);
                     }
                 }
-                result = events.stream().map(EventMapper::toFullDto).collect(Collectors.toList());
-                result.forEach(e -> e.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(e.getId(),
-                        RequestState.CONFIRMED).size()));
             }
-            return result;
+            for (var event : events) {
+                EventFullDto eventFullDto = EventMapper.toFullDto(event);
+                eventFullDto.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(event.getId(),
+                        RequestState.CONFIRMED).size());
+                Optional<Location> location = locationRepository.findById(event.getLocationId());
+                location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
+                result.add(eventFullDto);
+            }
+        }
+        return result;
     }
 
     @Transactional
     public EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
-            Optional<Event> targetEvent = eventRepository.findById(eventId);
-            if (targetEvent.isPresent()) {
-                Event event = EventMapper.adminDtoToEvent(adminUpdateEventRequest);
-                event.setCategory(targetEvent.get().getCategory());
-                event.setInitiator(targetEvent.get().getInitiator());
-                event.setPublishedOn(targetEvent.get().getPublishedOn());
-                event.setAvailable(targetEvent.get().isAvailable());
-                event.setViews(targetEvent.get().getViews());
-                event.setCreated(targetEvent.get().getCreated());
-                event.setState(targetEvent.get().getState());
-                EventFullDto result = EventMapper.toFullDto(eventRepository.save(event));
-                long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                        RequestState.CONFIRMED).size();
-                result.setConfirmedRequests((int) currentNumOfRequests);
-                return result;
-            } else {
-                throw new NotFoundException("Event не найден");
-            }
+        Optional<Event> targetEvent = eventRepository.findById(eventId);
+        if (targetEvent.isPresent()) {
+            Event event = EventMapper.adminDtoToEvent(adminUpdateEventRequest);
+            Location location = locationRepository.save(LocationMapper.toLocation(adminUpdateEventRequest.getLocation()));
+            event.setLocationId(location.getId());
+            event.setCategory(targetEvent.get().getCategory());
+            event.setInitiator(targetEvent.get().getInitiator());
+            event.setPublishedOn(targetEvent.get().getPublishedOn());
+            event.setAvailable(targetEvent.get().isAvailable());
+            event.setViews(targetEvent.get().getViews());
+            event.setCreated(targetEvent.get().getCreated());
+            event.setState(targetEvent.get().getState());
+            EventFullDto result = EventMapper.toFullDto(eventRepository.save(event));
+            long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
+                    RequestState.CONFIRMED).size();
+            result.setConfirmedRequests((int) currentNumOfRequests);
+            result.setLocation(LocationMapper.toDto(location));
+            return result;
+        } else {
+            throw new NotFoundException("Event не найден");
+        }
     }
 
     @Transactional
     public EventFullDto publishEventByAdmin(long eventId) {
-            Optional<Event> targetEvent = eventRepository.findById(eventId);
-            if (targetEvent.isPresent()) {
-                if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
-                    if (targetEvent.get().getState().equals(EventState.PENDING)) {
-                        targetEvent.get().setPublishedOn(LocalDateTime.now());
-                        targetEvent.get().setState(EventState.PUBLISHED);
-                        return EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
-                    } else {
-                        throw new ValidationException("Событие должно быть в состоянии ожидания публикации");
-                    }
-                } else {
-                    throw new ValidationException("Дата начала события должна быть не ранее чем за час от даты публикации");
-                }
-
-            } else {
-                throw new NotFoundException("Event не найден");
-            }
-    }
-
-    @Transactional
-    public EventFullDto rejectEventByAdmin(long eventId) {
-            Optional<Event> targetEvent = eventRepository.findById(eventId);
-            if (targetEvent.isPresent()) {
+        Optional<Event> targetEvent = eventRepository.findById(eventId);
+        if (targetEvent.isPresent()) {
+            if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
                 if (targetEvent.get().getState().equals(EventState.PENDING)) {
-                    targetEvent.get().setState(EventState.CANCELED);
-                    return EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
+                    targetEvent.get().setPublishedOn(LocalDateTime.now());
+                    targetEvent.get().setState(EventState.PUBLISHED);
+                    EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
+                    Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
+                    location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
+                    return eventFullDto;
                 } else {
                     throw new ValidationException("Событие должно быть в состоянии ожидания публикации");
                 }
             } else {
-                throw new NotFoundException("Event не найден");
+                throw new ValidationException("Дата начала события должна быть не ранее чем за час от даты публикации");
             }
+
+        } else {
+            throw new NotFoundException("Event не найден");
+        }
+    }
+
+    @Transactional
+    public EventFullDto rejectEventByAdmin(long eventId) {
+        Optional<Event> targetEvent = eventRepository.findById(eventId);
+        if (targetEvent.isPresent()) {
+            if (targetEvent.get().getState().equals(EventState.PENDING)) {
+                targetEvent.get().setState(EventState.CANCELED);
+                EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
+                Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
+                location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
+                return eventFullDto;
+            } else {
+                throw new ValidationException("Событие должно быть в состоянии ожидания публикации");
+            }
+        } else {
+            throw new NotFoundException("Event не найден");
+        }
     }
 }

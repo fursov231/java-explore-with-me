@@ -1,11 +1,11 @@
 package ru.practicum.ewm.event.model;
 
 import lombok.*;
+
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.user.model.User;
 
 import javax.persistence.*;
-import java.awt.*;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;  //todo
 
     private String annotation;
 
@@ -32,7 +32,8 @@ public class Event {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
-    private Point location;
+    @Column(name = "location_id")
+    private Long locationId;
     private boolean paid;
 
     @Column(name = "participant_limit")

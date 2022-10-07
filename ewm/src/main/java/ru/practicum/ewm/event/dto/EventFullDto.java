@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -28,7 +26,7 @@ public class EventFullDto {
     private Long views;
     private LocalDateTime createdOn;
     private String description;
-    private Point location;
+    private LocationDto location;
     private Integer participantLimit;
     private LocalDateTime publishedOn;
     private boolean requestModeration;

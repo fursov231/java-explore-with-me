@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-import java.awt.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,7 +20,7 @@ public class NewEventDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime eventDate;
 
-    private Point location;
+    private LocationDto location;
     private boolean paid;
     private Integer participantLimit;
     private boolean requestModeration;

@@ -23,7 +23,7 @@ public class EventMapper {
                 .build();
     }
 
-    //+ set confirmedRequest
+    //+ set confirmedRequest, locationDto
     public static EventFullDto toFullDto(Event event) {
         return EventFullDto.builder()
                 .id(event.getId())
@@ -36,7 +36,6 @@ public class EventMapper {
                 .views(event.getViews())
                 .createdOn(event.getCreated())
                 .description(event.getDescription())
-                .location(event.getLocation())
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn())
                 .requestModeration(event.isRequestModeration())
@@ -70,13 +69,12 @@ public class EventMapper {
                 .build();
     }
 
-    //+ set category, initiator, publishedOn
+    //+ set category, initiator, publishedOn, + locationId
     public static Event newDtoToEvent(NewEventDto newEventDto) {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .description(newEventDto.getDescription())
                 .eventDate(newEventDto.getEventDate())
-                .location(newEventDto.getLocation())
                 .paid(newEventDto.isPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.isRequestModeration())
@@ -88,27 +86,25 @@ public class EventMapper {
                 .build();
     }
 
-    //+ set category, initiator, publishedOn, available, views, created, state
+    //+ set category, initiator, publishedOn, available, views, created, state, locationDto
     public static Event adminDtoToEvent(AdminUpdateEventRequest adminUpdateEventRequest) {
         return Event.builder()
                 .annotation(adminUpdateEventRequest.getAnnotation())
                 .description(adminUpdateEventRequest.getDescription())
                 .eventDate(adminUpdateEventRequest.getEventDate())
-                .location(adminUpdateEventRequest.getLocation())
                 .paid(adminUpdateEventRequest.isPaid())
                 .participantLimit(adminUpdateEventRequest.getParticipantLimit())
                 .requestModeration(adminUpdateEventRequest.isRequestModeration())
                 .title(adminUpdateEventRequest.getTitle())
                 .build();
     }
-
+    //+ locationDto
     public static NewEventDto toNewDtoFromEvent(Event event) {
         return NewEventDto.builder()
                 .annotation(event.getAnnotation())
                 .description(event.getDescription())
                 .eventDate(event.getEventDate())
                 .category(event.getCategory().getId())
-                .location(event.getLocation())
                 .paid(event.isPaid())
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.isRequestModeration())

@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-import java.awt.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,7 +16,7 @@ public class AdminUpdateEventRequest {
     private Integer category;
     private String description;
     private LocalDateTime eventDate;
-    private Point location;
+    private LocationDto location;
     private boolean paid;
     private Integer participantLimit;
     private boolean requestModeration;

@@ -13,6 +13,14 @@ create table if not exists users
     name  varchar(128) not null
 );
 
+create table if not exists location
+(
+    id   bigserial
+        primary key,
+    lat  float not null,
+    lon float not null
+);
+
 create table if not exists events
 (
     id                 bigserial
@@ -23,7 +31,9 @@ create table if not exists events
             references categories,
     description        text         not null,
     event_date         timestamp    not null,
-    location           point        not null,
+    location_id        bigint       not null
+        constraint events_location_id_fk
+            references location,
     paid               boolean      not null,
     participant_limit  integer      not null,
     request_moderation boolean      not null,
@@ -31,11 +41,11 @@ create table if not exists events
     initiator_id       bigint       not null
         constraint events_users_id_fk
             references users,
-    published_on       timestamp    not null,
+    published_on       timestamp,
     state              varchar(128) not null,
-    views              bigint not null,
-    created            timestamp not null,
-    is_available          boolean not null
+    views              bigint       not null,
+    created            timestamp    not null,
+    is_available       boolean      not null
 );
 
 create table if not exists compilations
