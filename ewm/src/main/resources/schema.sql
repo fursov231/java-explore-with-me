@@ -42,7 +42,7 @@ create table if not exists events
         constraint events_users_id_fk
             references users,
     published_on       timestamp,
-    state              varchar(128) not null,
+    state              varchar(64) not null,
     views              bigint       not null,
     created            timestamp    not null,
     is_available       boolean      not null

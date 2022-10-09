@@ -28,6 +28,7 @@ import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,11 +53,11 @@ public class EventServiceImpl implements EventService {
         for (Integer categoryId : categories) {
             Optional<Category> category = categoryRepository.findById(categoryId.longValue());
             category.ifPresent(value -> events.addAll(eventRepository.findByParams(text, value, paid, rangeStart,
-                    rangeEnd, onlyAvailable, sort, pageRequest)));
+                    rangeEnd, onlyAvailable, String.valueOf(sort), pageRequest)));
         }
         List<EventShortDto> shortDtos = events.stream().map(EventMapper::toShortDto).collect(Collectors.toList());
         shortDtos.forEach(e -> e.setConfirmedRequests(
-                requestRepository.findRequestsByEvent_IdAndStatus(e.getId(), RequestState.CONFIRMED).size())
+                requestRepository.findRequestsByEvent_idAndStatus(e.getId(), String.valueOf(RequestState.CONFIRMED)).size())
         );
         return shortDtos;
     }
@@ -65,10 +66,10 @@ public class EventServiceImpl implements EventService {
     //todo сервис статистики
     public EventFullDto getEventById(long id) {
         Optional<Event> event = eventRepository.findById(id);
-        if (event.isPresent() && event.get().getState().equals(EventState.PUBLISHED)) {
+        if (event.isPresent() && event.get().getState().equals(String.valueOf(EventState.PUBLISHED))) {
             EventFullDto eventFullDto = EventMapper.toFullDto(event.get());
             eventFullDto.setConfirmedRequests(
-                    requestRepository.findRequestsByEvent_IdAndStatus(eventFullDto.getId(), RequestState.CONFIRMED).size()
+                    requestRepository.findRequestsByEvent_idAndStatus(eventFullDto.getId(), String.valueOf(RequestState.CONFIRMED)).size()
             );
             Optional<Location> location = locationRepository.findById(event.get().getLocationId());
             location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
@@ -84,8 +85,8 @@ public class EventServiceImpl implements EventService {
             PageRequest pageRequest = PageRequest.of(from / size, size);
             List<Event> events = eventRepository.findAllByInitiator(optionalTargetUser.get(), pageRequest);
             List<EventShortDto> shortDtos = events.stream().map(EventMapper::toShortDto).collect(Collectors.toList());
-            shortDtos.forEach(e -> e.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(e.getId(),
-                    RequestState.CONFIRMED).size()));
+            shortDtos.forEach(e -> e.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(e.getId(),
+                    String.valueOf(RequestState.CONFIRMED)).size()));
             return shortDtos;
         } else {
             throw new NotFoundException("Указанный userId не найден");
@@ -93,24 +94,23 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public UpdateEventRequest updateEvent(long userId, UpdateEventRequest updateEventRequest) {
-
+    public EventFullDto updateEvent(long userId, UpdateEventRequest updateEventRequest) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
-
         if (LocalDateTime.now().isBefore(updateEventRequest.getEventDate().minusHours(2))) {
             if (optionalTargetUser.isPresent()) {
                 Optional<Event> targetEvent = eventRepository.findById(updateEventRequest.getEventId());
                 if (targetEvent.isPresent()) {
-                    if (!targetEvent.get().getState().equals(EventState.PENDING)
-                            || !targetEvent.get().getState().equals(EventState.CANCELED)) {
-                        Event newEvent = EventMapper.toEvent(updateEventRequest);
-                        newEvent.setCategory(targetEvent.get().getCategory());
-                        if (targetEvent.get().getState().equals(EventState.CANCELED)) {
-                            newEvent.setState(EventState.PENDING);
-                        }
-                        newEvent.setAvailable(targetEvent.get().isAvailable());
-                        Event updatedEvent = eventRepository.save(newEvent);
-                        return EventMapper.toUpdatedDto(updatedEvent);
+                    if (!targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))
+                            || !targetEvent.get().getState().equals(String.valueOf(EventState.CANCELED))) {
+
+                        Event updatedEvent = eventUpdater(targetEvent.get(), updateEventRequest);
+                        eventRepository.save(updatedEvent);
+                        EventFullDto result = EventMapper.toFullDto(updatedEvent);
+                        Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
+                        location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
+                        result.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(result.getId(),
+                                String.valueOf(RequestState.CONFIRMED)).size());
+                        return result;
                     } else {
                         throw new ForbiddenException("Обновление данного event невозможно");
                     }
@@ -126,7 +126,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public NewEventDto addEvent(long userId, NewEventDto newEventDto) {
+    public EventFullDto addEvent(long userId, NewEventDto newEventDto) {
         if (LocalDateTime.now().isBefore(newEventDto.getEventDate().minusHours(2))) {
             Optional<User> optionalTargetUser = userRepository.findById(userId);
             Optional<Category> optionalCategory = categoryRepository.findById(newEventDto.getCategory());
@@ -136,9 +136,13 @@ public class EventServiceImpl implements EventService {
                 event.setLocationId(location.getId());
                 event.setInitiator(optionalTargetUser.get());
                 optionalCategory.ifPresent(event::setCategory);
+                System.out.println(event);
                 Event savedEvent = eventRepository.save(event);
-                NewEventDto result = EventMapper.toNewDtoFromEvent(savedEvent);
+                EventFullDto result = EventMapper.toFullDto(savedEvent);
                 result.setLocation(LocationMapper.toDto(location));
+                List<Request> requests = requestRepository.findRequestsByEvent_idAndStatus(event.getId(),
+                        String.valueOf(RequestState.CONFIRMED));
+                result.setConfirmedRequests(requests.size());
                 return result;
             } else {
                 throw new NotFoundException("Указанный userId не найден");
@@ -154,8 +158,8 @@ public class EventServiceImpl implements EventService {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
             if (event.isPresent()) {
                 EventFullDto result = EventMapper.toFullDto(event.get());
-                result.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(result.getId(),
-                        RequestState.CONFIRMED).size());
+                result.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(result.getId(),
+                        String.valueOf(RequestState.CONFIRMED)).size());
                 Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                 location.ifPresent(e -> result.setLocation(LocationMapper.toDto(e)));
                 return result;
@@ -174,14 +178,15 @@ public class EventServiceImpl implements EventService {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
             if (event.isPresent()) {
                 if (event.get().getInitiator().getId() == userId) {
-                    if (event.get().getState().equals(EventState.PENDING)) {
+                    if (event.get().getState().equals(String.valueOf(EventState.PENDING))) {
+                        event.get().setState(String.valueOf(EventState.CANCELED));
+                        eventRepository.save(event.get());
                         EventFullDto removableEvent = EventMapper.toFullDto(event.get());
                         removableEvent
-                                .setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(removableEvent.getId(),
-                                        RequestState.CONFIRMED).size());
+                                .setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(removableEvent.getId(),
+                                        String.valueOf(RequestState.CONFIRMED)).size());
                         Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                         location.ifPresent(e -> removableEvent.setLocation(LocationMapper.toDto(e)));
-                        eventRepository.deleteById(eventId);
                         return removableEvent;
                     } else {
                         throw new ValidationException("Событие должно быть в ожидании модерации ");
@@ -202,8 +207,11 @@ public class EventServiceImpl implements EventService {
         if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findById(eventId);
             if (event.isPresent()) {
-                List<Request> requests = requestRepository.findRequestsByEvent_IdAndRequester_Id(eventId, userId);
-                return requests.stream().map(RequestMapper::toDto).collect(Collectors.toList());
+                List<Request> requests = requestRepository.findRequestsByEvent_Id(eventId);
+                if (event.get().getInitiator().getId() == userId) {
+                    return requests.stream().map(RequestMapper::toDto).collect(Collectors.toList());
+                }
+                return Collections.EMPTY_LIST;
             } else {
                 throw new NotFoundException("Указанный eventId не найден");
             }
@@ -222,16 +230,16 @@ public class EventServiceImpl implements EventService {
                 if (optionalEvent.get().getParticipantLimit() == 0 || !optionalEvent.get().isRequestModeration()) {
                     return RequestMapper.toDto(optionalRequest.get());
                 }
-                long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                        RequestState.CONFIRMED).size();
-                if (optionalEvent.get().getParticipantLimit() >= currentNumOfRequests) {
+                long currentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                        String.valueOf(RequestState.CONFIRMED)).size();
+                if (currentNumOfRequests >= optionalEvent.get().getParticipantLimit()) {
                     throw new ValidationException("Достигнут лимит заявок");
                 }
-                optionalRequest.get().setStatus(RequestState.CONFIRMED);
-                long newCurrentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                        RequestState.CONFIRMED).size();
+                optionalRequest.get().setStatus(String.valueOf(RequestState.CONFIRMED));
+                long newCurrentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                        String.valueOf(RequestState.CONFIRMED)).size();
                 if (optionalEvent.get().getParticipantLimit() == newCurrentNumOfRequests) {
-                    optionalEvent.get().setAvailable(false);
+                    optionalEvent.get().setAvailable(true);
                     eventRepository.save(optionalEvent.get());
                 }
                 Request request = requestRepository.save(optionalRequest.get());
@@ -251,12 +259,12 @@ public class EventServiceImpl implements EventService {
             Optional<Event> optionalEvent = eventRepository.findById(eventId);
             Optional<Request> optionalRequest = requestRepository.findById(reqId);
             if (optionalEvent.isPresent() && optionalRequest.isPresent()) {
-                optionalRequest.get().setStatus(RequestState.CANCELED);
+                optionalRequest.get().setStatus(String.valueOf(RequestState.REJECTED));
                 Request request = requestRepository.save(optionalRequest.get());
-                long newCurrentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                        RequestState.CONFIRMED).size();
+                long newCurrentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                        String.valueOf(RequestState.CONFIRMED)).size();
                 if (optionalEvent.get().getParticipantLimit() < newCurrentNumOfRequests) {
-                    optionalEvent.get().setAvailable(true);
+                    optionalEvent.get().setAvailable(false);
                     eventRepository.save(optionalEvent.get());
                 }
                 return RequestMapper.toDto(request);
@@ -281,15 +289,15 @@ public class EventServiceImpl implements EventService {
                     for (Long category : categories) {
                         events = eventRepository
                                 .findAllByInitiator_IdAndStateAndCategory_IdAndEventDateBetween(
-                                        user, EventState.valueOf(state), category, rangeStart,
+                                        user, state, category, rangeStart,
                                         rangeEnd, pageRequest);
                     }
                 }
             }
             for (var event : events) {
                 EventFullDto eventFullDto = EventMapper.toFullDto(event);
-                eventFullDto.setConfirmedRequests(requestRepository.findRequestsByEvent_IdAndStatus(event.getId(),
-                        RequestState.CONFIRMED).size());
+                eventFullDto.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(event.getId(),
+                        String.valueOf(RequestState.CONFIRMED)).size());
                 Optional<Location> location = locationRepository.findById(event.getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
                 result.add(eventFullDto);
@@ -303,8 +311,7 @@ public class EventServiceImpl implements EventService {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             Event event = EventMapper.adminDtoToEvent(adminUpdateEventRequest);
-            Location location = locationRepository.save(LocationMapper.toLocation(adminUpdateEventRequest.getLocation()));
-            event.setLocationId(location.getId());
+            event.setLocationId(targetEvent.get().getLocationId());
             event.setCategory(targetEvent.get().getCategory());
             event.setInitiator(targetEvent.get().getInitiator());
             event.setPublishedOn(targetEvent.get().getPublishedOn());
@@ -313,10 +320,11 @@ public class EventServiceImpl implements EventService {
             event.setCreated(targetEvent.get().getCreated());
             event.setState(targetEvent.get().getState());
             EventFullDto result = EventMapper.toFullDto(eventRepository.save(event));
-            long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                    RequestState.CONFIRMED).size();
+            long currentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                    String.valueOf(RequestState.CONFIRMED)).size();
             result.setConfirmedRequests((int) currentNumOfRequests);
-            result.setLocation(LocationMapper.toDto(location));
+            Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
+            location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
             return result;
         } else {
             throw new NotFoundException("Event не найден");
@@ -328,9 +336,9 @@ public class EventServiceImpl implements EventService {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
-                if (targetEvent.get().getState().equals(EventState.PENDING)) {
+                if (targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))) {
                     targetEvent.get().setPublishedOn(LocalDateTime.now());
-                    targetEvent.get().setState(EventState.PUBLISHED);
+                    targetEvent.get().setState(String.valueOf(EventState.PUBLISHED));
                     EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                     Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                     location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
@@ -351,8 +359,8 @@ public class EventServiceImpl implements EventService {
     public EventFullDto rejectEventByAdmin(long eventId) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
-            if (targetEvent.get().getState().equals(EventState.PENDING)) {
-                targetEvent.get().setState(EventState.CANCELED);
+            if (targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))) {
+                targetEvent.get().setState(String.valueOf(EventState.CANCELED));
                 EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                 Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
@@ -363,5 +371,20 @@ public class EventServiceImpl implements EventService {
         } else {
             throw new NotFoundException("Event не найден");
         }
+    }
+
+    private Event eventUpdater(Event event, UpdateEventRequest updateEventRequest) {
+        event.setAnnotation(updateEventRequest.getAnnotation());
+        event.setCategory(categoryRepository.findById(updateEventRequest.getCategory()).get());
+        event.setDescription(updateEventRequest.getDescription());
+        event.setEventDate(updateEventRequest.getEventDate());
+        event.setId(updateEventRequest.getEventId());
+        event.setPaid(updateEventRequest.isPaid());
+        event.setParticipantLimit(updateEventRequest.getParticipantLimit());
+        event.setTitle(updateEventRequest.getTitle());
+        if (event.getState().equals(String.valueOf(EventState.CANCELED))) {
+            event.setState(String.valueOf(EventState.PENDING));
+        }
+        return event;
     }
 }

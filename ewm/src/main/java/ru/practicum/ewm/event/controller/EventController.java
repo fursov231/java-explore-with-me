@@ -11,6 +11,7 @@ import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -23,13 +24,16 @@ public class EventController {
     public List<EventShortDto> getAllEvents(@RequestParam(name = "text") String text,
                                             @RequestParam(name = "categories") List<Integer> categories,
                                             @RequestParam(name = "paid") boolean paid,
-                                            @RequestParam(name = "rangeStart") LocalDateTime rangeStart,
-                                            @RequestParam(name = "rangeEnd") LocalDateTime rangeEnd,
+                                            @RequestParam(name = "rangeStart") String rangeStart,
+                                            @RequestParam(name = "rangeEnd") String rangeEnd,
                                             @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                             @RequestParam(name = "sort") String sort,
                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                             @Positive @RequestParam(name = "size", defaultValue = "10") int size)  {
-        return eventService.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, SortValue.valueOf(sort), from, size);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
+        LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
+        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size);
     }
 
     @GetMapping("/events/{id}")
@@ -45,13 +49,13 @@ public class EventController {
     }
 
     @PatchMapping("/users/{userId}/events")
-    public UpdateEventRequest updateUsersEvent(@PathVariable long userId,
+    public EventFullDto updateUsersEvent(@PathVariable long userId,
                                                @RequestBody UpdateEventRequest updateEventRequest) {
         return eventService.updateEvent(userId, updateEventRequest);
     }
 
     @PostMapping("/users/{userId}/events")
-    public NewEventDto addUsersEvent(@PathVariable long userId,
+    public EventFullDto addUsersEvent(@PathVariable long userId,
                                      @RequestBody NewEventDto newEventDto) {
         return eventService.addEvent(userId, newEventDto);
     }
@@ -74,14 +78,14 @@ public class EventController {
         return eventService.getRequests(userId, eventId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/{reqId}/confirm")
+    @PatchMapping("/users/{userId}/events/{eventId}/requests/{reqId}/confirm")
     public ParticipationRequestDto confirmRequest(@PathVariable long userId,
                                                   @PathVariable long eventId,
                                                   @PathVariable long reqId) {
         return eventService.confirmRequest(userId, eventId, reqId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/{reqId}/reject")
+    @PatchMapping("/users/{userId}/events/{eventId}/requests/{reqId}/reject")
     public ParticipationRequestDto rejectRequest(@PathVariable long userId,
                                                  @PathVariable long eventId,
                                                  @PathVariable long reqId) {
@@ -92,11 +96,14 @@ public class EventController {
     public List<EventFullDto> findEvents(@RequestParam List<Long> users,
                                          @RequestParam List<String> states,
                                          @RequestParam List<Long> categories,
-                                         @RequestParam LocalDateTime rangeStart,
-                                         @RequestParam LocalDateTime rangeEnd,
+                                         @RequestParam String rangeStart,
+                                         @RequestParam String rangeEnd,
                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                          @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return eventService.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
+        LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
+        return eventService.findEventsByAdmin(users, states, categories, start, end, from, size);
     }
 
     @PutMapping("/admin/events/{eventId}")

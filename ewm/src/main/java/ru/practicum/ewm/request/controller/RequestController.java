@@ -1,7 +1,6 @@
 package ru.practicum.ewm.request.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.service.RequestService;
@@ -27,9 +26,8 @@ public class RequestController {
     }
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
-    public ResponseEntity<Object> cancelRequest(@PathVariable long userId,
-                                                @PathVariable long requestId) {
-         requestService.cancelRequest(userId, requestId);
-         return ResponseEntity.ok("Запрос на участие удален");
+    public ParticipationRequestDto cancelRequest(@PathVariable long userId,
+                                                 @PathVariable long requestId) {
+         return requestService.cancelRequest(userId, requestId);
     }
 }

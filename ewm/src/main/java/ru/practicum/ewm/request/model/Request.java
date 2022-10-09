@@ -28,6 +28,6 @@ public class Request {
     @ManyToOne
     private User requester;
 
-    private RequestState status;
+    private String status;
     private LocalDateTime created;
 }

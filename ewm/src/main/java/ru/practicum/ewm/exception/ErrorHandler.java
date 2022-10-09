@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.ArrayList;
 import java.util.Collections;
 
-@RestControllerAdvice("ru.practicum.ewm")
+@RestControllerAdvice("ru.practicum.ewm.event.controller")
 public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)

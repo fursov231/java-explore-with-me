@@ -1,5 +1,8 @@
 package ru.practicum.ewm.event.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
 
 import ru.practicum.ewm.category.model.Category;
@@ -19,7 +22,7 @@ import java.time.LocalDateTime;
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;  //todo
+    private Long id;
 
     private String annotation;
 
@@ -29,6 +32,8 @@ public class Event {
 
     private String description;
 
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
@@ -51,7 +56,7 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    private EventState state;
+    private String state;
     private Long views;
     private LocalDateTime created;
 

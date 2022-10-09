@@ -9,6 +9,7 @@ import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
+import ru.practicum.ewm.compilation.repository.jdbc.JdbCompilationsEventsDao;
 import ru.practicum.ewm.compilation.util.CompilationMapper;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
@@ -17,6 +18,7 @@ import ru.practicum.ewm.event.util.EventMapper;
 import ru.practicum.ewm.exception.NotFoundException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,20 +29,26 @@ import java.util.stream.Collectors;
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
+    private final JdbCompilationsEventsDao jdbCompilationsEventsDao;
 
     public List<CompilationDto> getAllCompilations(boolean pinned, int from, int size) {
-        List<CompilationDto> result = new ArrayList<>();
+
         PageRequest pageRequest = PageRequest.of(from / size, size);
         Page<Compilation> compilationPage = compilationRepository.findAllByPinned(pinned, pageRequest);
         List<Compilation> compilationList = compilationPage.getContent();
 
+        List<CompilationDto> result = new ArrayList<>();
+
         for (var compilation : compilationList) {
             List<EventShortDto> events = new ArrayList<>();
-            List<Long> eventsIdList = compilationRepository.findEventIdByCompilationId(compilation.getId());
+            List<Long> eventsIdList = jdbCompilationsEventsDao.findEventIdByCompilationId(compilation.getId());
             if (!eventsIdList.isEmpty()) {
                 eventsIdList.forEach(e -> events.add(EventMapper.toShortDto(eventRepository.findById(e).get())));
-                CompilationDto.builder().id(compilation.getId()).title(compilation.getTitle()).pinned(compilation.isPinned())
-                        .events(events).build();
+                result.add(CompilationDto.builder().id(compilation.getId()).title(compilation.getTitle()).pinned(compilation.isPinned())
+                        .events(events).build());
+            } else {
+                 result.add(CompilationDto.builder().events(Collections.EMPTY_LIST).id(compilation.getId())
+                         .title(compilation.getTitle()).pinned(compilation.isPinned()).build());
             }
         }
         return result;
@@ -50,7 +58,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto getCompilationById(long compId) {
         Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
         if (compilationOptional.isPresent()) {
-            List<Long> eventId = compilationRepository.findEventIdByCompilationId(compId);
+            List<Long> eventId = jdbCompilationsEventsDao.findEventIdByCompilationId(compId);
             List<EventShortDto> events = new ArrayList<>();
             if (!eventId.isEmpty()) {
                 events = eventId.stream().map(e -> EventMapper.toShortDto(eventRepository.findById(e)
@@ -74,8 +82,8 @@ public class CompilationServiceImpl implements CompilationService {
         List<Long> events = newCompilationDto.getEvents();
 
         List<EventShortDto> eventDtos = new ArrayList<>();
-        if (!events.contains(null) && events.size() != 1) { //todo
-            events.forEach(e -> compilationRepository.saveCompilation(compilation.getId(), e));
+        if (!events.isEmpty()) {
+            events.forEach(e -> jdbCompilationsEventsDao.saveCompilation(compilation.getId(), e));
             events.forEach(e -> eventDtos.add(EventMapper.toShortDto(eventRepository.findById(e).get())));
         }
         result.setEvents(eventDtos);
@@ -99,8 +107,7 @@ public class CompilationServiceImpl implements CompilationService {
         Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
         Optional<Event> eventOptional = eventRepository.findById(eventId);
         if (eventOptional.isPresent() && compilationOptional.isPresent()) {
-            compilationRepository.saveCompilation(compId, eventId);
-            return;
+            jdbCompilationsEventsDao.saveCompilation(compId, eventId);
         } else {
             throw new NotFoundException("Не найден указанный compilationId или eventId");
         }

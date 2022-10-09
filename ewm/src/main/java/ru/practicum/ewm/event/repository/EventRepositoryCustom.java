@@ -12,5 +12,5 @@ import java.util.List;
 public interface EventRepositoryCustom {
     List<Event> findByParams(String text, Category category, boolean paid,
                                      LocalDateTime rangeStart, LocalDateTime rangeEnd, boolean onlyAvailable,
-                                     SortValue sort, Pageable pageable);
+                                     String sort, Pageable pageable);
 }

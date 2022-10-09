@@ -32,7 +32,7 @@ public class RequestServiceImpl implements RequestService {
 
     public List<ParticipationRequestDto> getAllRequests(long userId) {
         List<ParticipationRequestDto> result = new ArrayList<>();
-        List<Request> requests = requestRepository.findAllById(userId);
+        List<Request> requests = requestRepository.findAllByRequester_id(userId);
         for (var request : requests) {
             Optional<Event> event = eventRepository.findById(request.getEvent().getId());
             Optional<User> user = userRepository.findById(request.getRequester().getId());
@@ -55,16 +55,16 @@ public class RequestServiceImpl implements RequestService {
             if (userId == event.get().getInitiator().getId()) {
                 throw new ValidationException("Инициатор события не может добавить запрос на участие в своём событии");
             }
-            if (event.get().getState().equals(EventState.PUBLISHED)) {
-                long currentNumOfRequests = requestRepository.findRequestsByEvent_IdAndStatus(eventId,
-                        RequestState.CONFIRMED).size();
-                if (currentNumOfRequests >= event.get().getParticipantLimit()) {
+            if (event.get().getState().equals(String.valueOf(EventState.PUBLISHED))) {
+                long currentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                        String.valueOf(RequestState.CONFIRMED)).size();
+                if (currentNumOfRequests != 0 && currentNumOfRequests >= event.get().getParticipantLimit()) {
                     throw new ForbiddenException("Достигнут лимит запросов на участие");
                 }
                 Request request = Request.builder().created(LocalDateTime.now()).requester(user.get()).event(event.get())
-                        .status(RequestState.PENDING).build();
+                        .status(String.valueOf(RequestState.PENDING)).build();
                 if (!event.get().isRequestModeration()) {
-                    request.setStatus(RequestState.CONFIRMED);
+                    request.setStatus(String.valueOf(RequestState.CONFIRMED));
                 }
                 return RequestMapper.toDto(requestRepository.save(request));
             } else {
@@ -75,8 +75,15 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Transactional
-    public void cancelRequest(long userId, long requestId) {
+    public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         Optional<User> user = userRepository.findById(userId);
-        user.ifPresent(value -> requestRepository.deleteByRequesterAndId(value, requestId));
+        Optional<Request> request = requestRepository.findById(requestId);
+        if (user.isPresent() && request.isPresent()) {
+            request.get().setStatus(String.valueOf(RequestState.CANCELED));
+            requestRepository.save(request.get());
+            return RequestMapper.toDto(request.get());
+        } else {
+            throw new NotFoundException("Указанный userId или requestId не найден");
+        }
     }
 }

@@ -7,6 +7,7 @@ import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.user.util.UserMapper;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class EventMapper {
     //+ set confirmedRequest
@@ -39,20 +40,34 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn())
                 .requestModeration(event.isRequestModeration())
-                .state(event.getState())
+                .state(String.valueOf(event.getState()))
                 .build();
     }
 
-    //+ set categoryId
+    //+ set categoryId, locationDto, initiator, views, created
     public static Event toEvent(UpdateEventRequest updateEventRequest) {
         return Event.builder()
                 .id(updateEventRequest.getEventId())
                 .annotation(updateEventRequest.getAnnotation())
                 .description(updateEventRequest.getDescription())
-                .eventDate(updateEventRequest.getEventDate())
+                .eventDate(updateEventRequest.getEventDate().truncatedTo(ChronoUnit.SECONDS))
                 .paid(updateEventRequest.isPaid())
                 .participantLimit(updateEventRequest.getParticipantLimit())
                 .title(updateEventRequest.getTitle())
+                .build();
+    }
+
+    //+locationDto
+    public static Event fullDtoToEvent(EventFullDto eventFullDto) {
+        return Event.builder()
+                .id(eventFullDto.getId())
+                .category(CategoryMapper.toCategory(eventFullDto.getCategory()))
+                .annotation(eventFullDto.getAnnotation())
+                .description(eventFullDto.getDescription())
+                .eventDate(eventFullDto.getEventDate().truncatedTo(ChronoUnit.SECONDS))
+                .paid(eventFullDto.isPaid())
+                .participantLimit(eventFullDto.getParticipantLimit())
+                .title(eventFullDto.getTitle())
                 .build();
     }
 
@@ -74,14 +89,14 @@ public class EventMapper {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .description(newEventDto.getDescription())
-                .eventDate(newEventDto.getEventDate())
+                .eventDate(newEventDto.getEventDate().truncatedTo(ChronoUnit.SECONDS))
                 .paid(newEventDto.isPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.isRequestModeration())
                 .title(newEventDto.getTitle())
-                .state(EventState.PENDING)
+                .state(String.valueOf(EventState.PENDING))
                 .views(0L)
-                .isAvailable(true)
+                .isAvailable(false)
                 .created(LocalDateTime.now())
                 .build();
     }
@@ -91,7 +106,7 @@ public class EventMapper {
         return Event.builder()
                 .annotation(adminUpdateEventRequest.getAnnotation())
                 .description(adminUpdateEventRequest.getDescription())
-                .eventDate(adminUpdateEventRequest.getEventDate())
+                .eventDate(adminUpdateEventRequest.getEventDate().truncatedTo(ChronoUnit.SECONDS))
                 .paid(adminUpdateEventRequest.isPaid())
                 .participantLimit(adminUpdateEventRequest.getParticipantLimit())
                 .requestModeration(adminUpdateEventRequest.isRequestModeration())

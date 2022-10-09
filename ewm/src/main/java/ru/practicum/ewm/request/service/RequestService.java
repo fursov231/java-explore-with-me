@@ -9,5 +9,5 @@ public interface RequestService {
 
     ParticipationRequestDto addRequest(long userId, long eventId);
 
-    void cancelRequest(long userId, long requestId);
+    ParticipationRequestDto cancelRequest(long userId, long requestId);
 }

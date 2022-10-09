@@ -19,31 +19,21 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     public List<UserDto> getAllUsers(List<Long> ids, int from, int size) {
-            PageRequest pageRequest = PageRequest.of(from / size, size);
-            Page<User> userPage = userRepository.findAll(pageRequest);
-            List<User> targetUsers = new ArrayList<>();
-            if (!ids.isEmpty()) {
-                for (var id : ids) {
-                    Optional<User> user = userRepository.findById(id);
-                    user.ifPresent(targetUsers::add);
-                }
+        PageRequest pageRequest = PageRequest.of(from / size, size);
+        Page<User> userPage = userRepository.findAll(pageRequest);
+        if (!ids.isEmpty()) {
+            List<User> foundUsers = new ArrayList<>();
+            for (var id : ids) {
+                Optional<User> user = userRepository.findById(id);
+                user.ifPresent(foundUsers::add);
             }
-            if (!targetUsers.isEmpty()) {
-                return userPage.getContent()
-                        .stream()
-                        .filter(targetUsers::contains)
-                        .map(UserMapper::toDto)
-                        .collect(Collectors.toList());
-            } else {
-                return userPage.getContent()
-                        .stream()
-                        .map(UserMapper::toDto)
-                        .collect(Collectors.toList());
-            }
+            return foundUsers.stream().map(UserMapper::toDto).collect(Collectors.toList());
+        }
+        return userPage.getContent().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
     @Transactional
@@ -53,6 +43,6 @@ public class UserServiceImpl implements UserService{
 
     @Transactional
     public void deleteUserById(long userId) {
-            userRepository.deleteById(userId);
+        userRepository.deleteById(userId);
     }
 }
