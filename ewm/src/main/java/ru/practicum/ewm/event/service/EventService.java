@@ -4,14 +4,16 @@ import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.SortValue;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {
     List<EventShortDto> getAllEvents(String text, List<Integer> categories, boolean paid, LocalDateTime rangeStart,
-                                            LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from, int size);
+                                     LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from,
+                                     int size, HttpServletRequest request);
 
-    EventFullDto getEventById(long id);
+    EventFullDto getEventById(long id, HttpServletRequest request);
 
     List<EventShortDto> getAllUsersEvents(long userId, int from, int size);
 

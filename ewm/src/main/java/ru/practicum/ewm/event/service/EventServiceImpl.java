@@ -1,9 +1,14 @@
 package ru.practicum.ewm.event.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.event.dto.*;
@@ -26,6 +31,7 @@ import ru.practicum.ewm.request.util.RequestMapper;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,9 +50,14 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
 
-    //todo сервис статистики
+    @Value("${stats-service.url}")
+    private String statsUrl;
+
+    WebClient client = WebClient.create();
+
     public List<EventShortDto> getAllEvents(String text, List<Integer> categories, boolean paid, LocalDateTime rangeStart,
-                                            LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from, int size) {
+                                            LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from, int size,
+                                            HttpServletRequest request) {
         List<Event> events = new ArrayList<>();
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
@@ -59,12 +70,12 @@ public class EventServiceImpl implements EventService {
         shortDtos.forEach(e -> e.setConfirmedRequests(
                 requestRepository.findRequestsByEvent_idAndStatus(e.getId(), String.valueOf(RequestState.CONFIRMED)).size())
         );
+
+        sendHitRequest(request);
         return shortDtos;
     }
 
-
-    //todo сервис статистики
-    public EventFullDto getEventById(long id) {
+    public EventFullDto getEventById(long id, HttpServletRequest request) {
         Optional<Event> event = eventRepository.findById(id);
         if (event.isPresent() && event.get().getState().equals(String.valueOf(EventState.PUBLISHED))) {
             EventFullDto eventFullDto = EventMapper.toFullDto(event.get());
@@ -73,6 +84,8 @@ public class EventServiceImpl implements EventService {
             );
             Optional<Location> location = locationRepository.findById(event.get().getLocationId());
             location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
+
+            sendHitRequest(request);
             return eventFullDto;
         } else {
             throw new NotFoundException("Указанный EventId не найден");
@@ -386,5 +399,22 @@ public class EventServiceImpl implements EventService {
             event.setState(String.valueOf(EventState.PENDING));
         }
         return event;
+    }
+
+    private void sendHitRequest(HttpServletRequest request) {
+        EndpointHit endpointHit = EndpointHit.builder()
+                .app("ewm-service")
+                .uri(String.valueOf(request.getRequestURI()))
+                .ip(String.valueOf(request.getRemoteAddr()))
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        client.post()
+                .uri(statsUrl + "/hit")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(endpointHit), EndpointHit.class)
+                .exchange()
+                .block();
     }
 }

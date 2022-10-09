@@ -1,5 +1,6 @@
 package ru.practicum.statistics.util;
 
+import com.vladmihalcea.hibernate.type.basic.Inet;
 import ru.practicum.statistics.dto.EndpointHit;
 import ru.practicum.statistics.dto.ViewStats;
 import ru.practicum.statistics.model.Stat;
@@ -10,7 +11,7 @@ public class StatisticsMapper {
                 .id(endpointHit.getId())
                 .app(endpointHit.getApp())
                 .uri(endpointHit.getUri())
-                .ip(endpointHit.getIp())
+                .ip(new Inet(endpointHit.getIp()))
                 .timestamp(endpointHit.getTimestamp())
                 .build();
     }

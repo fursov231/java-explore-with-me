@@ -30,7 +30,7 @@ public class CategoryController {
     }
 
     @PatchMapping("/admin/categories")
-    public CategoryDto updateCat(@RequestBody  CategoryDto categoryDto) {
+    public CategoryDto updateCat(@RequestBody CategoryDto categoryDto) {
         return categoryService.updateCategory(categoryDto);
     }
 

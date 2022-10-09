@@ -8,6 +8,7 @@ import ru.practicum.statistics.dto.ViewStats;
 import ru.practicum.statistics.service.StatisticsService;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -22,10 +23,13 @@ public class StatisticsController {
     }
 
     @GetMapping("/stats")
-    public List<ViewStats> findAllByParams(@RequestParam LocalDateTime start,
-                                           @RequestParam LocalDateTime end,
+    public List<ViewStats> findAllByParams(@RequestParam String start,
+                                           @RequestParam String end,
                                            @RequestParam List <String> uris,
                                            @RequestParam boolean unique) {
-        return statisticsService.findAllByParams(start, end, uris, unique);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime startTime = LocalDateTime.parse(start, formatter);
+        LocalDateTime endTime = LocalDateTime.parse(end, formatter);
+        return statisticsService.findAllByParams(startTime, endTime, uris, unique);
     }
 }

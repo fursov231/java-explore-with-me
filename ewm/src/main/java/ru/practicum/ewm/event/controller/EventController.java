@@ -8,6 +8,7 @@ import ru.practicum.ewm.event.model.SortValue;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -29,16 +30,17 @@ public class EventController {
                                             @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                             @RequestParam(name = "sort") String sort,
                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                            @Positive @RequestParam(name = "size", defaultValue = "10") int size)  {
+                                            @Positive @RequestParam(name = "size", defaultValue = "10") int size,
+                                            HttpServletRequest request)  {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
         LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
-        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size);
+        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size, request);
     }
 
     @GetMapping("/events/{id}")
-    public EventFullDto getEventById(@PathVariable long id) {
-        return eventService.getEventById(id);
+    public EventFullDto getEventById(@PathVariable long id, HttpServletRequest request) {
+        return eventService.getEventById(id, request);
     }
 
     @GetMapping("/users/{userId}/events")

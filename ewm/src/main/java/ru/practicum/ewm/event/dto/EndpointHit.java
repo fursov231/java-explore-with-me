@@ -1,4 +1,4 @@
-package ru.practicum.ewm.request.dto;
+package ru.practicum.ewm.event.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ParticipationRequestDto {
-    Long id;
-    Long event;
-    LocalDateTime created;
-    Long requester;
-    String status;
+public class EndpointHit {
+    private Long id;
+    private String app;
+    private String uri;
+    private String ip;
+    private LocalDateTime timestamp;
 }
