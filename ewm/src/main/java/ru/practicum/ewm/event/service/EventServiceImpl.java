@@ -50,7 +50,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
 
-    @Value("${stats-service.url}")
+    @Value("${stats.url}")
     private String statsUrl;
 
     WebClient client = WebClient.create();

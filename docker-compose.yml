@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
 
-  ewm-service:
+  ewm-server:
     build: ./ewm
     image: fursov231/ewm-service
     container_name: ewm_container
@@ -34,7 +34,7 @@ services:
       - ewm-db
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
-      STATS_SERVER_URL: http://stats-db:9090
+      STATS_URL: http://stats-server:9090
 
   stats-server:
     build: ./statistics
