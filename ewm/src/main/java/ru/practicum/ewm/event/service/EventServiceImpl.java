@@ -76,20 +76,18 @@ public class EventServiceImpl implements EventService {
     }
 
     public EventFullDto getEventById(long id, HttpServletRequest request) {
-        Optional<Event> event = eventRepository.findById(id);
-        if (event.isPresent() && event.get().getState().equals(String.valueOf(EventState.PUBLISHED))) {
-            EventFullDto eventFullDto = EventMapper.toFullDto(event.get());
+        Event event = eventRepository.findById(id).orElseThrow(() -> new NotFoundException("Указанный EventId не найден"));
+        EventFullDto eventFullDto = EventMapper.toFullDto(event);
+        if (event.getState().equals(EventState.PUBLISHED)) {
             eventFullDto.setConfirmedRequests(
                     requestRepository.findRequestsByEvent_idAndStatus(eventFullDto.getId(), String.valueOf(RequestState.CONFIRMED)).size()
             );
-            Optional<Location> location = locationRepository.findById(event.get().getLocationId());
+            Optional<Location> location = locationRepository.findById(event.getLocationId());
             location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
 
             sendHitRequest(request);
-            return eventFullDto;
-        } else {
-            throw new NotFoundException("Указанный EventId не найден");
         }
+        return eventFullDto;
     }
 
     public List<EventShortDto> getAllUsersEvents(long userId, int from, int size) {
@@ -113,8 +111,8 @@ public class EventServiceImpl implements EventService {
             if (optionalTargetUser.isPresent()) {
                 Optional<Event> targetEvent = eventRepository.findById(updateEventRequest.getEventId());
                 if (targetEvent.isPresent()) {
-                    if (!targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))
-                            || !targetEvent.get().getState().equals(String.valueOf(EventState.CANCELED))) {
+                    if (!targetEvent.get().getState().equals(EventState.PENDING)
+                            || !targetEvent.get().getState().equals((EventState.CANCELED))) {
 
                         Event updatedEvent = eventUpdater(targetEvent.get(), updateEventRequest);
                         eventRepository.save(updatedEvent);
@@ -191,8 +189,8 @@ public class EventServiceImpl implements EventService {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
             if (event.isPresent()) {
                 if (event.get().getInitiator().getId() == userId) {
-                    if (event.get().getState().equals(String.valueOf(EventState.PENDING))) {
-                        event.get().setState(String.valueOf(EventState.CANCELED));
+                    if (event.get().getState().equals(EventState.PENDING)) {
+                        event.get().setState(EventState.CANCELED);
                         eventRepository.save(event.get());
                         EventFullDto removableEvent = EventMapper.toFullDto(event.get());
                         removableEvent
@@ -319,6 +317,7 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
+    //todo +views
     @Transactional
     public EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
@@ -329,7 +328,6 @@ public class EventServiceImpl implements EventService {
             event.setInitiator(targetEvent.get().getInitiator());
             event.setPublishedOn(targetEvent.get().getPublishedOn());
             event.setAvailable(targetEvent.get().isAvailable());
-            event.setViews(targetEvent.get().getViews());
             event.setCreated(targetEvent.get().getCreated());
             event.setState(targetEvent.get().getState());
             EventFullDto result = EventMapper.toFullDto(eventRepository.save(event));
@@ -349,9 +347,9 @@ public class EventServiceImpl implements EventService {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
-                if (targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))) {
+                if (targetEvent.get().getState().equals(EventState.PENDING)) {
                     targetEvent.get().setPublishedOn(LocalDateTime.now());
-                    targetEvent.get().setState(String.valueOf(EventState.PUBLISHED));
+                    targetEvent.get().setState(EventState.PUBLISHED);
                     EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                     Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                     location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
@@ -372,8 +370,8 @@ public class EventServiceImpl implements EventService {
     public EventFullDto rejectEventByAdmin(long eventId) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
-            if (targetEvent.get().getState().equals(String.valueOf(EventState.PENDING))) {
-                targetEvent.get().setState(String.valueOf(EventState.CANCELED));
+            if (targetEvent.get().getState().equals(EventState.PENDING)) {
+                targetEvent.get().setState(EventState.CANCELED);
                 EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                 Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
@@ -395,8 +393,8 @@ public class EventServiceImpl implements EventService {
         event.setPaid(updateEventRequest.isPaid());
         event.setParticipantLimit(updateEventRequest.getParticipantLimit());
         event.setTitle(updateEventRequest.getTitle());
-        if (event.getState().equals(String.valueOf(EventState.CANCELED))) {
-            event.setState(String.valueOf(EventState.PENDING));
+        if (event.getState().equals(EventState.CANCELED)) {
+            event.setState(EventState.PENDING);
         }
         return event;
     }

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class EventMapper {
-    //+ set confirmedRequest
+    //+ set confirmedRequest, views
     public static EventShortDto toShortDto(Event event) {
         return EventShortDto.builder()
                 .id(event.getId())
@@ -20,11 +20,10 @@ public class EventMapper {
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
                 .paid(event.isPaid())
                 .title(event.getTitle())
-                .views(event.getViews())
                 .build();
     }
 
-    //+ set confirmedRequest, locationDto
+    //+ set confirmedRequest, locationDto, views
     public static EventFullDto toFullDto(Event event) {
         return EventFullDto.builder()
                 .id(event.getId())
@@ -34,13 +33,12 @@ public class EventMapper {
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
                 .paid(event.isPaid())
                 .title(event.getTitle())
-                .views(event.getViews())
                 .createdOn(event.getCreated())
                 .description(event.getDescription())
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn())
                 .requestModeration(event.isRequestModeration())
-                .state(String.valueOf(event.getState()))
+                .state(event.getState())
                 .build();
     }
 
@@ -94,8 +92,7 @@ public class EventMapper {
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.isRequestModeration())
                 .title(newEventDto.getTitle())
-                .state(String.valueOf(EventState.PENDING))
-                .views(0L)
+                .state(EventState.PENDING)
                 .isAvailable(false)
                 .created(LocalDateTime.now())
                 .build();

@@ -1,6 +1,7 @@
 package ru.practicum.ewm.category.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
@@ -32,12 +34,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public CategoryDto getCategoryById(long catId) {
-        CategoryDto result = null;
-        Optional<Category> categoryOptional = categoryRepository.findById(catId);
-        if (categoryOptional.isPresent()) {
-            result = CategoryMapper.toDto(categoryOptional.get());
-        }
-        return result;
+        Optional<Category> optionalCategory = categoryRepository.findById(catId);
+        return optionalCategory.map(CategoryMapper::toDto).orElse(null);
     }
 
     @Transactional
@@ -46,6 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (optionalCategory.isPresent()) {
             throw new ValidationException("Категория с указанным именем уже существует");
         }
+        log.info("Категория id=${} обновлена", categoryDto.getId());
         return CategoryMapper.toDto(categoryRepository.save(CategoryMapper.toCategory(categoryDto)));
     }
 
@@ -57,6 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         Category category = CategoryMapper.requestDtoToCategory(newCategoryDto);
         Category saved = categoryRepository.save(category);
+        log.info("Категория ${} сохранена", category.getName());
         return CategoryMapper.toDto(saved);
     }
 

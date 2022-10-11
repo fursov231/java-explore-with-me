@@ -55,7 +55,7 @@ public class RequestServiceImpl implements RequestService {
             if (userId == event.get().getInitiator().getId()) {
                 throw new ValidationException("Инициатор события не может добавить запрос на участие в своём событии");
             }
-            if (event.get().getState().equals(String.valueOf(EventState.PUBLISHED))) {
+            if (event.get().getState().equals(EventState.PUBLISHED)) {
                 long currentNumOfRequests = requestRepository.findRequestsByEvent_idAndStatus(eventId,
                         String.valueOf(RequestState.CONFIRMED)).size();
                 if (currentNumOfRequests != 0 && currentNumOfRequests >= event.get().getParticipantLimit()) {

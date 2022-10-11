@@ -2,15 +2,15 @@ create table if not exists categories
 (
     id   bigserial
         primary key,
-    name varchar(128) not null
+    name varchar(128) unique not null
 );
 
 create table if not exists users
 (
     id    bigserial
         primary key,
-    email varchar(128) not null,
-    name  varchar(128) not null
+    email varchar(128) unique not null,
+    name  varchar(255) not null
 );
 
 create table if not exists location
@@ -25,11 +25,11 @@ create table if not exists events
 (
     id                 bigserial
         primary key,
-    annotation         text         not null,
+    annotation         varchar(255)         not null,
     category_id        bigint       not null
         constraint events_categories_id_fk
             references categories,
-    description        text         not null,
+    description        varchar(255)         not null,
     event_date         timestamp    not null,
     location_id        bigint       not null
         constraint events_location_id_fk
@@ -42,8 +42,7 @@ create table if not exists events
         constraint events_users_id_fk
             references users,
     published_on       timestamp,
-    state              varchar(64) not null,
-    views              bigint       not null,
+    state              varchar(64) default 'pending' not null,
     created            timestamp    not null,
     is_available       boolean      not null
 );

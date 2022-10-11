@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.event.dto.EventShortDto;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
@@ -16,5 +18,7 @@ public class CompilationDto {
     private List<EventShortDto> events;
     Long id;
     boolean pinned;
+    @NotBlank
+    @Size(max = 128)
     String title;
 }

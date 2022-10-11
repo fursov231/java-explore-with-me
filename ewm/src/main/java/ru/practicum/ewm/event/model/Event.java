@@ -56,8 +56,8 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    private String state;
-    private Long views;
+    @Enumerated(EnumType.STRING)
+    private EventState state;
     private LocalDateTime created;
 
     @Column(name = "is_available")

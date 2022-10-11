@@ -1,8 +1,10 @@
 package ru.practicum.ewm.compilation.model;
 
 import lombok.*;
+import ru.practicum.ewm.event.model.Event;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -19,4 +21,7 @@ public class Compilation {
     private String title;
     private boolean pinned;
 
+    @JoinTable(name = "compilations_events")
+    @OneToMany
+    private List<Event> events;
 }

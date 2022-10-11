@@ -1,11 +1,12 @@
 package ru.practicum.ewm.category.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.ewm.category.dto.CategoryDto;
-import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.service.CategoryService;
 
 import javax.validation.constraints.Positive;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class CategoryController {
+public class CategoryPublicController {
     private final CategoryService categoryService;
 
     @GetMapping("/categories")
@@ -27,21 +28,5 @@ public class CategoryController {
     @GetMapping("/categories/{catId}")
     public CategoryDto getCatById(@PathVariable long catId) {
         return categoryService.getCategoryById(catId);
-    }
-
-    @PatchMapping("/admin/categories")
-    public CategoryDto updateCat(@RequestBody CategoryDto categoryDto) {
-        return categoryService.updateCategory(categoryDto);
-    }
-
-    @PostMapping("/admin/categories")
-    public CategoryDto addCat(@RequestBody NewCategoryDto newCategoryDto) {
-        return categoryService.addCategory(newCategoryDto);
-    }
-
-    @DeleteMapping("/admin/categories/{catId}")
-    public ResponseEntity<String> deleteCatById(@PathVariable long catId) {
-        categoryService.deleteCategory(catId);
-        return ResponseEntity.ok("Категория удалена");
     }
 }
