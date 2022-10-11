@@ -25,11 +25,11 @@ create table if not exists events
 (
     id                 bigserial
         primary key,
-    annotation         varchar(255)         not null,
+    annotation         text         not null, --todo
     category_id        bigint       not null
         constraint events_categories_id_fk
             references categories,
-    description        varchar(255)         not null,
+    description        text         not null, --todo
     event_date         timestamp    not null,
     location_id        bigint       not null
         constraint events_location_id_fk

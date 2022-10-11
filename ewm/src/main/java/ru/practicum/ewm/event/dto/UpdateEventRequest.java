@@ -6,6 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Future;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Null;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,15 +17,27 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class UpdateEventRequest {
+    @Null
+    @NotBlank
+    @Size(max = 500)
     private String annotation;
     private Long category;
+
+    @Null
+    @NotBlank
+    @Size(max = 500)
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
+    @Future
     private LocalDateTime eventDate;
 
     private Long eventId;
     private boolean paid;
     private Integer participantLimit;
+
+    @Null
+    @NotBlank
+    @Size(max = 128)
     private String title;
 }

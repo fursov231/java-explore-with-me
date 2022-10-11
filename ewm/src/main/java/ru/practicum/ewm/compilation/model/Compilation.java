@@ -21,7 +21,10 @@ public class Compilation {
     private String title;
     private boolean pinned;
 
-    @JoinTable(name = "compilations_events")
-    @OneToMany
+    @ManyToMany
+    @JoinTable(
+            name = "compilations_events",
+            joinColumns = @JoinColumn(name = "compilation_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id"))
     private List<Event> events;
 }

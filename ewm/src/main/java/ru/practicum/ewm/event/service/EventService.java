@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.service;
 
 import ru.practicum.ewm.event.dto.*;
+import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.model.SortValue;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
@@ -31,7 +32,7 @@ public interface EventService {
 
     ParticipationRequestDto rejectRequest(long userId, long eventId, long reqId);
 
-    List<EventFullDto> findEventsByAdmin(List<Long> users, List<String> states,
+    List<EventFullDto> findEventsByAdmin(List<Long> users, List<EventState> states,
                                          List<Long> categories, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, int from, int size);
 

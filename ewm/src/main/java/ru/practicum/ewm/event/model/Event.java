@@ -32,8 +32,6 @@ public class Event {
 
     private String description;
 
-    @JsonSerialize(using = LocalDateSerializer.class)
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 

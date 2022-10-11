@@ -16,17 +16,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class EventFullDto {
-    private String annotation;
-    private CategoryDto category;
-    private Integer confirmedRequests;
+    protected String annotation;
+    protected CategoryDto category;
+    protected Integer confirmedRequests;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime eventDate;
-    private Long id;
-    private UserShortDto initiator;
-    private boolean paid;
-    private String title;
-    private Long views;
+    protected LocalDateTime eventDate;
+    protected Long id;
+    protected UserShortDto initiator;
+    protected boolean paid;
+    protected String title;
+    protected Long views;
     private LocalDateTime createdOn;
     private String description;
     private LocationDto location;

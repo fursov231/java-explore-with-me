@@ -147,7 +147,6 @@ public class EventServiceImpl implements EventService {
                 event.setLocationId(location.getId());
                 event.setInitiator(optionalTargetUser.get());
                 optionalCategory.ifPresent(event::setCategory);
-                System.out.println(event);
                 Event savedEvent = eventRepository.save(event);
                 EventFullDto result = EventMapper.toFullDto(savedEvent);
                 result.setLocation(LocationMapper.toDto(location));
@@ -287,7 +286,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public List<EventFullDto> findEventsByAdmin(List<Long> users, List<String> states,
+    public List<EventFullDto> findEventsByAdmin(List<Long> users, List<EventState> states,
                                                 List<Long> categories, LocalDateTime rangeStart,
                                                 LocalDateTime rangeEnd, int from, int size) {
         PageRequest pageRequest = PageRequest.of(from / size, size);
@@ -296,7 +295,7 @@ public class EventServiceImpl implements EventService {
         List<EventFullDto> result = new ArrayList<>();
         if (!users.isEmpty() && !states.isEmpty() && !categories.isEmpty()) {
             for (Long user : users) {
-                for (String state : states) {
+                for (EventState state : states) {
                     for (Long category : categories) {
                         events = eventRepository
                                 .findAllByInitiator_IdAndStateAndCategory_IdAndEventDateBetween(
@@ -412,6 +411,15 @@ public class EventServiceImpl implements EventService {
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(endpointHit), EndpointHit.class)
+                .exchange()
+                .block();
+    }
+
+    private void getViews(HttpServletRequest request) {
+
+        client.get()
+                .uri(statsUrl + "/stats")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .exchange()
                 .block();
     }

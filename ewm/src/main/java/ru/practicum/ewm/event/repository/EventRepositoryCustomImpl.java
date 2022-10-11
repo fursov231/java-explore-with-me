@@ -50,6 +50,4 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .setMaxResults(pageable.getPageSize())
                 .getResultList();
     }
-
-
 }

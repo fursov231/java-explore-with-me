@@ -12,15 +12,9 @@ import java.time.temporal.ChronoUnit;
 public class EventMapper {
     //+ set confirmedRequest, views
     public static EventShortDto toShortDto(Event event) {
-        return EventShortDto.builder()
-                .id(event.getId())
-                .annotation(event.getAnnotation())
-                .category(CategoryMapper.toDto(event.getCategory()))
-                .eventDate(event.getEventDate())
-                .initiator(UserMapper.toUserShortDto(event.getInitiator()))
-                .paid(event.isPaid())
-                .title(event.getTitle())
-                .build();
+        return new EventShortDto(event.getAnnotation(), CategoryMapper.toDto(event.getCategory()),
+                event.getEventDate(), event.getId(), UserMapper.toUserShortDto(event.getInitiator()), event.isPaid(),
+                event.getTitle());
     }
 
     //+ set confirmedRequest, locationDto, views

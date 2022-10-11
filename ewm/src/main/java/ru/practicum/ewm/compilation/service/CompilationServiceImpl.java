@@ -9,7 +9,6 @@ import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
-import ru.practicum.ewm.compilation.repository.jdbc.JdbCompilationsEventsDao;
 import ru.practicum.ewm.compilation.util.CompilationMapper;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
-    private final JdbCompilationsEventsDao jdbCompilationsEventsDao;
 
     public List<CompilationDto> getAllCompilations(boolean pinned, int from, int size) {
 
@@ -41,15 +39,19 @@ public class CompilationServiceImpl implements CompilationService {
 
         for (var compilation : compilationList) {
             List<EventShortDto> events = new ArrayList<>();
-            List<Long> eventsIdList = jdbCompilationsEventsDao.findEventIdByCompilationId(compilation.getId());
-            if (!eventsIdList.isEmpty()) {
-                eventsIdList.forEach(e -> events.add(EventMapper.toShortDto(eventRepository.findById(e).get())));
-                result.add(CompilationDto.builder().id(compilation.getId()).title(compilation.getTitle()).pinned(compilation.isPinned())
-                        .events(events).build());
-            } else {
-                 result.add(CompilationDto.builder().events(Collections.EMPTY_LIST).id(compilation.getId())
-                         .title(compilation.getTitle()).pinned(compilation.isPinned()).build());
+            Optional<Compilation> optionalCompilation = compilationRepository.findById(compilation.getId());
+            if (optionalCompilation.isPresent()) {
+                List<Event> eventsList = optionalCompilation.get().getEvents();
+                if (!eventsList.isEmpty()) {
+                    eventsList.forEach(e -> events.add(EventMapper.toShortDto(e)));
+                    result.add(CompilationDto.builder().id(compilation.getId()).title(compilation.getTitle()).pinned(compilation.isPinned())
+                            .events(events).build());
+                } else {
+                    result.add(CompilationDto.builder().events(Collections.EMPTY_LIST).id(compilation.getId())
+                            .title(compilation.getTitle()).pinned(compilation.isPinned()).build());
+                }
             }
+
         }
         return result;
     }
@@ -58,18 +60,17 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto getCompilationById(long compId) {
         Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
         if (compilationOptional.isPresent()) {
-            List<Long> eventId = jdbCompilationsEventsDao.findEventIdByCompilationId(compId);
-            List<EventShortDto> events = new ArrayList<>();
-            if (!eventId.isEmpty()) {
-                events = eventId.stream().map(e -> EventMapper.toShortDto(eventRepository.findById(e)
-                        .get())).collect(Collectors.toList());
+            List<Event> events = compilationOptional.get().getEvents();
+            List<EventShortDto> shortDtos = new ArrayList<>();
+            if (!events.isEmpty()) {
+                shortDtos = events.stream().map(EventMapper::toShortDto).collect(Collectors.toList());
             }
 
             return CompilationDto.builder()
                     .id(compilationOptional.get().getId())
                     .title(compilationOptional.get().getTitle())
                     .pinned(compilationOptional.get().isPinned())
-                    .events(events)
+                    .events(shortDtos)
                     .build();
         }
         throw new NotFoundException("Запрошенной подборки не найдено");
@@ -77,15 +78,15 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Transactional
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
-        Compilation compilation = compilationRepository.save(CompilationMapper.newCompDtoToComp(newCompilationDto));
-        CompilationDto result = CompilationMapper.toDto(compilation);
-        List<Long> events = newCompilationDto.getEvents();
-
+        List<Long> eventsId = newCompilationDto.getEvents();
+        List<Event> events = new ArrayList<>();
+        eventsId.forEach(e -> events.add(eventRepository.findById(e).get()));
+        Compilation compilation = CompilationMapper.newCompDtoToComp(newCompilationDto);
+        compilation.setEvents(events);
+        Compilation savedCompilatation = compilationRepository.save(compilation);
+        CompilationDto result = CompilationMapper.toDto(savedCompilatation);
         List<EventShortDto> eventDtos = new ArrayList<>();
-        if (!events.isEmpty()) {
-            events.forEach(e -> jdbCompilationsEventsDao.saveCompilation(compilation.getId(), e));
-            events.forEach(e -> eventDtos.add(EventMapper.toShortDto(eventRepository.findById(e).get())));
-        }
+        events.forEach(e -> eventDtos.add(EventMapper.toShortDto(e)));
         result.setEvents(eventDtos);
         return result;
     }
@@ -107,7 +108,10 @@ public class CompilationServiceImpl implements CompilationService {
         Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
         Optional<Event> eventOptional = eventRepository.findById(eventId);
         if (eventOptional.isPresent() && compilationOptional.isPresent()) {
-            jdbCompilationsEventsDao.saveCompilation(compId, eventId);
+            List<Event> events = compilationOptional.get().getEvents();
+            events.add(eventOptional.get());
+            compilationOptional.get().setEvents(events);
+            compilationRepository.save(compilationOptional.get());
         } else {
             throw new NotFoundException("Не найден указанный compilationId или eventId");
         }
