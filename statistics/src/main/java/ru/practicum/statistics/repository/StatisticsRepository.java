@@ -20,4 +20,7 @@ public interface StatisticsRepository extends JpaRepository<Stat, Long> {
             "and timestamp  < cast(:end as date) " +
             "and uri ilike :uri ", nativeQuery = true)
     List<Stat> findAllByTimestampBetweenAndUriUnique(LocalDateTime start, LocalDateTime end, String uri);
+
+    @Query("select count (s) from Stat s where s.uri like :uri")
+    Long findViews(String uri);
 }

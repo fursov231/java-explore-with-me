@@ -46,4 +46,8 @@ public class StatisticsService {
         viewStats.forEach(e -> e.setHits((long) stats.size()));
         return new ArrayList<>(viewStats);
     }
+
+    public Long findViews(String uri) {
+       return statisticsRepository.findViews(uri);
+    }
 }

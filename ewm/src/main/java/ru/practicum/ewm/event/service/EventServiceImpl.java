@@ -2,6 +2,7 @@ package ru.practicum.ewm.event.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -415,12 +416,15 @@ public class EventServiceImpl implements EventService {
                 .block();
     }
 
-    private void getViews(HttpServletRequest request) {
-
-        client.get()
-                .uri(statsUrl + "/stats")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .exchange()
+    private int getViews(HttpServletRequest request) {
+        Mono<Long> response = client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(statsUrl + "/views")
+                        .queryParam("uri", request.getRequestURI())
+                        .build())
+                .retrieve(
+                .bodyToMono(Mono<Long>.class)
                 .block();
+
     }
 }
