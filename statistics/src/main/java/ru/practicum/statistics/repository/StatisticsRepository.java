@@ -1,6 +1,5 @@
 package ru.practicum.statistics.repository;
 
-import com.vladmihalcea.hibernate.type.basic.Inet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
