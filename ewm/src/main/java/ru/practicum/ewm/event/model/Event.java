@@ -1,10 +1,6 @@
 package ru.practicum.ewm.event.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
-
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.user.model.User;
 
