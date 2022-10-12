@@ -3,10 +3,7 @@ package ru.practicum.ewm.event.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
-import ru.practicum.ewm.event.dto.UpdateEventRequest;
+import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
@@ -71,5 +68,11 @@ public class EventPrivateController {
                                                  @PathVariable long eventId,
                                                  @PathVariable long reqId) {
         return eventService.rejectRequest(userId, eventId, reqId);
+    }
+
+    @PostMapping("/users/{userId}/events/{eventId}/comments")
+    public CommentRequestDto addNewComment(@RequestParam long userId,
+                                           @RequestParam long eventId, @RequestBody CommentRequestDto commentRequestDto) {
+        return eventService.addNewComment(userId, eventId, commentRequestDto);
     }
 }
