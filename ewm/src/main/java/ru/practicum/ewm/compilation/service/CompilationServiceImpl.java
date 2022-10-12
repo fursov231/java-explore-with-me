@@ -1,6 +1,7 @@
 package ru.practicum.ewm.compilation.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
@@ -88,12 +90,14 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> eventDtos = new ArrayList<>();
         events.forEach(e -> eventDtos.add(EventMapper.toShortDto(e)));
         result.setEvents(eventDtos);
+        log.info("Подборка id=${} добавлена", result.getId());
         return result;
     }
 
     @Transactional
     public void deleteCompilationById(long compId) {
         compilationRepository.deleteById(compId);
+        log.info("Подборка id=${} удалена", compId);
     }
 
     @Transactional
@@ -112,6 +116,7 @@ public class CompilationServiceImpl implements CompilationService {
             events.add(eventOptional.get());
             compilationOptional.get().setEvents(events);
             compilationRepository.save(compilationOptional.get());
+            log.info("Событие id=${} добавлено в подборку id=${}", eventId, compId);
         } else {
             throw new NotFoundException("Не найден указанный compilationId или eventId");
         }
@@ -124,6 +129,7 @@ public class CompilationServiceImpl implements CompilationService {
             Compilation targetCompilation = compilationOptional.get();
             targetCompilation.setPinned(false);
             compilationRepository.save(targetCompilation);
+            log.info("Подборка id=${} откреплена с главной страницы", compId);
         } else {
             throw new NotFoundException("Не найден указанный compilationId");
         }
@@ -136,6 +142,7 @@ public class CompilationServiceImpl implements CompilationService {
             Compilation targetCompilation = compilationOptional.get();
             targetCompilation.setPinned(true);
             compilationRepository.save(targetCompilation);
+            log.info("Подборка id=${} закреплена на главной страницы", compId);
         } else {
             throw new NotFoundException("Не найден указанный compilationId");
         }

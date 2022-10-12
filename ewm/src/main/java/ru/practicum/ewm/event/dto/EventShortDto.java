@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class EventShortDto extends EventFullDto {
     public EventShortDto(String annotation, CategoryDto category, LocalDateTime eventDate,
                          Long id, UserShortDto initiator, boolean paid, String title) {

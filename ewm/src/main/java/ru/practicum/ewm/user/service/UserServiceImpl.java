@@ -1,6 +1,7 @@
 package ru.practicum.ewm.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -38,11 +40,13 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     public UserDto addUser(NewUserRequest newUserRequest) {
+        log.info("Пользователь name=${} добавлен", newUserRequest.getName());
         return UserMapper.toDto(userRepository.save(UserMapper.requestDtoToUser(newUserRequest)));
     }
 
     @Transactional
     public void deleteUserById(long userId) {
+        log.info("Пользователь id=${} удален", userId);
         userRepository.deleteById(userId);
     }
 }

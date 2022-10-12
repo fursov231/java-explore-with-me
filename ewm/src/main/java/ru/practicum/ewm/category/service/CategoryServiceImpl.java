@@ -66,6 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (!events.isEmpty()) {
             throw new ValidationException("Удаление категорий, которые связаны с событиями запрещено");
         }
+        log.info("Категория id=${} удалена", catId);
         categoryRepository.deleteById(catId);
     }
 }

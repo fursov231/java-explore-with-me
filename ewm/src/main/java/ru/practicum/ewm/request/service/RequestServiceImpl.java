@@ -1,6 +1,7 @@
 package ru.practicum.ewm.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.model.Event;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
@@ -66,6 +68,7 @@ public class RequestServiceImpl implements RequestService {
                 if (!event.get().isRequestModeration()) {
                     request.setStatus(String.valueOf(RequestState.CONFIRMED));
                 }
+                log.info("Запрос на участие id=${} добавлен", request.getId());
                 return RequestMapper.toDto(requestRepository.save(request));
             } else {
                 throw new ForbiddenException("Нельзя участвовать в неопубликованном событии");
@@ -81,6 +84,7 @@ public class RequestServiceImpl implements RequestService {
         if (user.isPresent() && request.isPresent()) {
             request.get().setStatus(String.valueOf(RequestState.CANCELED));
             requestRepository.save(request.get());
+            log.info("Запрос на участие id=${} отклонен", request.get().getId());
             return RequestMapper.toDto(request.get());
         } else {
             throw new NotFoundException("Указанный userId или requestId не найден");
