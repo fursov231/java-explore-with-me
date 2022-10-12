@@ -80,5 +80,20 @@ create table if not exists requests
     created      timestamp   not null
 );
 
+create table if not exists comments
+(
+    id        bigserial
+        constraint comments_pk
+            primary key,
+    author_id bigint        not null
+        constraint comments_users_id_fk
+            references users,
+    created   timestamp     not null,
+    event_id  bigint        not null
+        constraint comments_events_id_fk
+            references events,
+    text      varchar(1000) not null
+);
+
 
 
