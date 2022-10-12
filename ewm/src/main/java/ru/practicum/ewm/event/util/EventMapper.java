@@ -104,6 +104,7 @@ public class EventMapper {
                 .title(adminUpdateEventRequest.getTitle())
                 .build();
     }
+
     //+ locationDto
     public static NewEventDto toNewDtoFromEvent(Event event) {
         return NewEventDto.builder()
