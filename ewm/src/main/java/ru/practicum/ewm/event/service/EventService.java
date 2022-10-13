@@ -42,9 +42,9 @@ public interface EventService {
 
     EventFullDto rejectEventByAdmin(long eventId, HttpServletRequest request);
 
-    CommentRequestDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto);
+    CommentResponseDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto);
 
-    CommentRequestDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto);
+    CommentResponseDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto);
 
-    CommentRequestDto deleteComment(long userId, long eventId, long commentId);
+    void deleteComment(long userId, long eventId, long commentId);
 }

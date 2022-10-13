@@ -2,7 +2,6 @@ package ru.practicum.ewm.event.util;
 
 import ru.practicum.ewm.event.dto.CommentRequestDto;
 import ru.practicum.ewm.event.dto.CommentResponseDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.UpdateCommentDto;
 import ru.practicum.ewm.event.model.Comment;
 import ru.practicum.ewm.user.util.UserMapper;
@@ -11,7 +10,6 @@ import java.time.LocalDateTime;
 
 public class CommentMapper {
     public static CommentResponseDto toResponseDto(Comment comment) {
-        //+confirmedRequest and views on eventdto
         return CommentResponseDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
@@ -29,8 +27,8 @@ public class CommentMapper {
                 .build();
     }
 
+    //+user, event
     public static Comment toEvent(UpdateCommentDto updateCommentDto) {
-        //+user, event
         return Comment.builder()
                 .id(updateCommentDto.getId())
                 .text(updateCommentDto.getText())

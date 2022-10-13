@@ -17,6 +17,7 @@ import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.CommentRepository;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.event.repository.LocationRepository;
+import ru.practicum.ewm.event.util.CommentMapper;
 import ru.practicum.ewm.event.util.EventMapper;
 import ru.practicum.ewm.event.util.LocationMapper;
 import ru.practicum.ewm.exception.ForbiddenException;
@@ -401,29 +402,58 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Event не найден");
         }
     }
-//todo + view + setconfirmed
+
     @Override
-    public CommentRequestDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto) {
+    public CommentResponseDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto) {
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalEvent.isPresent() && optionalUser.isPresent()) {
             if (optionalEvent.get().getState().equals(EventState.PUBLISHED)) {
-                Comment comment =
+                Comment comment = CommentMapper.toEvent(commentRequestDto);
+                comment.setEvent(optionalEvent.get());
+                comment.setAuthor(optionalUser.get());
+                Comment savedComment = commentRepository.save(comment);
+                log.info("Комментарий id=${} добавлен", savedComment.getId());
+                return CommentMapper.toResponseDto(savedComment);
+            } else {
+                throw new ValidationException("Невозможно добавить комментарий на неопубликованное или отмененное событие");
             }
-
         } else {
-            throw new NotFoundException("Event не найден");
+            throw new NotFoundException("Event или User не найден");
         }
     }
 
     @Override
-    public CommentRequestDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto) {
-        return null;
+    public CommentResponseDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto) {
+        Optional<Comment> optionalComment = commentRepository.findById(updateCommentDto.getId());
+        if (optionalComment.isPresent()) {
+            Comment comment = CommentMapper.toEvent(updateCommentDto);
+            comment.setAuthor(optionalComment.get().getAuthor());
+            comment.setEvent(optionalComment.get().getEvent());
+            commentRepository.save(comment);
+            log.info("Комментарий id=${} обновлен", comment.getId());
+            return CommentMapper.toResponseDto(comment);
+        } else {
+            throw new NotFoundException("Указанный комментарий не найден");
+        }
     }
 
     @Override
-    public CommentRequestDto deleteComment(long userId, long eventId, long commentId) {
-        return null;
+    public void deleteComment(long userId, long eventId, long commentId) {
+        Optional<Comment> optionalComment = commentRepository.findById(commentId);
+        if (optionalComment.isPresent()) {
+            Optional<Event> optionalEvent = eventRepository.findById(eventId);
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalEvent.isPresent() && optionalUser.isPresent()
+                    && optionalEvent.get().getId() == eventId && optionalUser.get().getId() == userId) {
+                commentRepository.deleteById(commentId);
+                log.info("Комментарий id=${} удален", commentId);
+            } else {
+                throw new ValidationException("Указан неверный userId или eventId");
+            }
+        } else {
+            throw new NotFoundException("Указанный commentId не найден");
+        }
     }
 
     private Event eventUpdater(Event event, UpdateEventRequest updateEventRequest) {
