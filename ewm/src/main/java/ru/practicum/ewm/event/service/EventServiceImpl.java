@@ -13,10 +13,8 @@ import reactor.core.publisher.Mono;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.event.model.Location;
-import ru.practicum.ewm.event.model.SortValue;
+import ru.practicum.ewm.event.model.*;
+import ru.practicum.ewm.event.repository.CommentRepository;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.event.repository.LocationRepository;
 import ru.practicum.ewm.event.util.EventMapper;
@@ -51,6 +49,7 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
+    private final CommentRepository commentRepository;
 
     @Value("${stats.url}")
     private String statsUrl;
@@ -401,6 +400,30 @@ public class EventServiceImpl implements EventService {
         } else {
             throw new NotFoundException("Event не найден");
         }
+    }
+//todo + view + setconfirmed
+    @Override
+    public CommentRequestDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto) {
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalEvent.isPresent() && optionalUser.isPresent()) {
+            if (optionalEvent.get().getState().equals(EventState.PUBLISHED)) {
+                Comment comment =
+            }
+
+        } else {
+            throw new NotFoundException("Event не найден");
+        }
+    }
+
+    @Override
+    public CommentRequestDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto) {
+        return null;
+    }
+
+    @Override
+    public CommentRequestDto deleteComment(long userId, long eventId, long commentId) {
+        return null;
     }
 
     private Event eventUpdater(Event event, UpdateEventRequest updateEventRequest) {

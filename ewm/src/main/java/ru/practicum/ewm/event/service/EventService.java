@@ -41,4 +41,10 @@ public interface EventService {
     EventFullDto publishEventByAdmin(long eventId, HttpServletRequest request);
 
     EventFullDto rejectEventByAdmin(long eventId, HttpServletRequest request);
+
+    CommentRequestDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto);
+
+    CommentRequestDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto);
+
+    CommentRequestDto deleteComment(long userId, long eventId, long commentId);
 }

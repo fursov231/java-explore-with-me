@@ -75,4 +75,17 @@ public class EventPrivateController {
                                            @RequestParam long eventId, @RequestBody CommentRequestDto commentRequestDto) {
         return eventService.addNewComment(userId, eventId, commentRequestDto);
     }
+
+    @PatchMapping("/users/{userId}/events/{eventId}/comments")
+    public CommentRequestDto patchComment(@RequestParam long userId,
+                                           @RequestParam long eventId, @RequestBody UpdateCommentDto updateCommentDto) {
+        return eventService.updateComment(userId, eventId, updateCommentDto);
+    }
+
+    @DeleteMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
+    public CommentRequestDto patchComment(@RequestParam long userId,
+                                          @RequestParam long eventId,
+                                          @RequestParam long commentId) {
+        return eventService.deleteComment(userId, eventId, commentId);
+    }
 }
