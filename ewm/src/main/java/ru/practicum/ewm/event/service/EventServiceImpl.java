@@ -58,8 +58,7 @@ public class EventServiceImpl implements EventService {
     WebClient client = WebClient.create();
 
     public List<EventShortDto> getAllEvents(String text, List<Integer> categories, boolean paid, LocalDateTime rangeStart,
-                                            LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from, int size,
-                                            HttpServletRequest request) {
+                                            LocalDateTime rangeEnd, boolean onlyAvailable, SortValue sort, int from, int size) {
         List<Event> events = new ArrayList<>();
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
@@ -72,9 +71,7 @@ public class EventServiceImpl implements EventService {
         shortDtos.forEach(e -> e.setConfirmedRequests(
                 requestRepository.findRequestsByEvent_idAndStatus(e.getId(), String.valueOf(RequestState.CONFIRMED)).size())
         );
-        shortDtos.forEach(e -> e.setViews(getViews(request)));
-
-        sendHitRequest(request);
+        shortDtos.forEach(e -> e.setViews(getViews(e.getId())));
         return shortDtos;
     }
 
@@ -87,13 +84,19 @@ public class EventServiceImpl implements EventService {
             );
             Optional<Location> location = locationRepository.findById(event.getLocationId());
             location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
-            eventFullDto.setViews(getViews(request));
+            eventFullDto.setViews(getViews(eventFullDto.getId()));
+            List<Comment> comments = commentRepository.findAllByEvent_Id(eventFullDto.getId());
+            List<CommentShortDto> shortComments = comments
+                    .stream()
+                    .map(CommentMapper::toShortDto)
+                    .collect(Collectors.toList());
+            eventFullDto.setComment(shortComments);
             sendHitRequest(request);
         }
         return eventFullDto;
     }
 
-    public List<EventShortDto> getAllUsersEvents(long userId, int from, int size, HttpServletRequest request) {
+    public List<EventShortDto> getAllUsersEvents(long userId, int from, int size) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
         if (optionalTargetUser.isPresent()) {
             PageRequest pageRequest = PageRequest.of(from / size, size);
@@ -101,7 +104,7 @@ public class EventServiceImpl implements EventService {
             List<EventShortDto> shortDtos = events.stream().map(EventMapper::toShortDto).collect(Collectors.toList());
             shortDtos.forEach(e -> e.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(e.getId(),
                     String.valueOf(RequestState.CONFIRMED)).size()));
-            shortDtos.forEach(e -> e.setViews(getViews(request)));
+            shortDtos.forEach(e -> e.setViews(getViews(e.getId())));
             return shortDtos;
         } else {
             throw new NotFoundException("Указанный userId не найден");
@@ -109,7 +112,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto updateEvent(long userId, UpdateEventRequest updateEventRequest, HttpServletRequest request) {
+    public EventFullDto updateEvent(long userId, UpdateEventRequest updateEventRequest) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
         if (LocalDateTime.now().isBefore(updateEventRequest.getEventDate().minusHours(2))) {
             if (optionalTargetUser.isPresent()) {
@@ -125,7 +128,13 @@ public class EventServiceImpl implements EventService {
                         location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
                         result.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(result.getId(),
                                 String.valueOf(RequestState.CONFIRMED)).size());
-                        result.setViews(getViews(request));
+                        result.setViews(getViews(targetEvent.get().getId()));
+                        List<Comment> comments = commentRepository.findAllByEvent_Id(targetEvent.get().getId());
+                        List<CommentShortDto> shortComments = comments
+                                .stream()
+                                .map(CommentMapper::toShortDto)
+                                .collect(Collectors.toList());
+                        result.setComment(shortComments);
                         log.info("Событие id=${} обновлено", updateEventRequest.getEventId());
                         return result;
                     } else {
@@ -143,7 +152,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto addEvent(long userId, NewEventDto newEventDto, HttpServletRequest request) {
+    public EventFullDto addEvent(long userId, NewEventDto newEventDto) {
         if (LocalDateTime.now().isBefore(newEventDto.getEventDate().minusHours(2))) {
             Optional<User> optionalTargetUser = userRepository.findById(userId);
             Optional<Category> optionalCategory = categoryRepository.findById(newEventDto.getCategory());
@@ -159,7 +168,13 @@ public class EventServiceImpl implements EventService {
                 List<Request> requests = requestRepository.findRequestsByEvent_idAndStatus(event.getId(),
                         String.valueOf(RequestState.CONFIRMED));
                 result.setConfirmedRequests(requests.size());
-                result.setViews(getViews(request));
+                result.setViews(getViews(event.getId()));
+                List<Comment> comments = commentRepository.findAllByEvent_Id(event.getId());
+                List<CommentShortDto> shortComments = comments
+                        .stream()
+                        .map(CommentMapper::toShortDto)
+                        .collect(Collectors.toList());
+                result.setComment(shortComments);
                 log.info("Событие id=${} добавлено", result.getId());
                 return result;
             } else {
@@ -170,7 +185,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public EventFullDto getUsersEventById(long userId, long eventId, HttpServletRequest request) {
+    public EventFullDto getUsersEventById(long userId, long eventId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
         if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
@@ -180,7 +195,13 @@ public class EventServiceImpl implements EventService {
                         String.valueOf(RequestState.CONFIRMED)).size());
                 Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                 location.ifPresent(e -> result.setLocation(LocationMapper.toDto(e)));
-                result.setViews(getViews(request));
+                result.setViews(getViews(eventId));
+                List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+                List<CommentShortDto> shortComments = comments
+                        .stream()
+                        .map(CommentMapper::toShortDto)
+                        .collect(Collectors.toList());
+                result.setComment(shortComments);
                 return result;
             } else {
                 throw new NotFoundException("Указанный event не найден");
@@ -191,7 +212,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto cancelEvent(long userId, long eventId, HttpServletRequest request) {
+    public EventFullDto cancelEvent(long userId, long eventId) {
         Optional<User> optionalTargetUser = userRepository.findById(userId);
         if (optionalTargetUser.isPresent()) {
             Optional<Event> event = eventRepository.findByInitiatorAndId(optionalTargetUser.get(), eventId);
@@ -206,7 +227,13 @@ public class EventServiceImpl implements EventService {
                                         String.valueOf(RequestState.CONFIRMED)).size());
                         Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                         location.ifPresent(e -> removableEvent.setLocation(LocationMapper.toDto(e)));
-                        removableEvent.setViews(getViews(request));
+                        removableEvent.setViews(getViews(eventId));
+                        List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+                        List<CommentShortDto> shortComments = comments
+                                .stream()
+                                .map(CommentMapper::toShortDto)
+                                .collect(Collectors.toList());
+                        removableEvent.setComment(shortComments);
                         log.info("Событие id=${} отклонено", removableEvent.getId());
                         return removableEvent;
                     } else {
@@ -232,7 +259,7 @@ public class EventServiceImpl implements EventService {
                 if (event.get().getInitiator().getId() == userId) {
                     return requests.stream().map(RequestMapper::toDto).collect(Collectors.toList());
                 }
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             } else {
                 throw new NotFoundException("Указанный eventId не найден");
             }
@@ -301,7 +328,7 @@ public class EventServiceImpl implements EventService {
 
     public List<EventFullDto> findEventsByAdmin(List<Long> users, List<EventState> states,
                                                 List<Long> categories, LocalDateTime rangeStart,
-                                                LocalDateTime rangeEnd, int from, int size, HttpServletRequest request) {
+                                                LocalDateTime rangeEnd, int from, int size) {
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
         List<Event> events = new ArrayList<>();
@@ -323,7 +350,13 @@ public class EventServiceImpl implements EventService {
                         String.valueOf(RequestState.CONFIRMED)).size());
                 Optional<Location> location = locationRepository.findById(event.getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
-                eventFullDto.setViews(getViews(request));
+                eventFullDto.setViews(getViews(event.getId()));
+                List<Comment> comments = commentRepository.findAllByEvent_Id(event.getId());
+                List<CommentShortDto> shortComments = comments
+                        .stream()
+                        .map(CommentMapper::toShortDto)
+                        .collect(Collectors.toList());
+                eventFullDto.setComment(shortComments);
                 result.add(eventFullDto);
             }
         }
@@ -331,7 +364,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest, HttpServletRequest request) {
+    public EventFullDto updateEventByAdmin(long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             Event event = EventMapper.adminDtoToEvent(adminUpdateEventRequest);
@@ -348,8 +381,14 @@ public class EventServiceImpl implements EventService {
             result.setConfirmedRequests((int) currentNumOfRequests);
             Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
             location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
-            Long views = getViews(request);
+            Long views = getViews(eventId);
             result.setViews(views);
+            List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+            List<CommentShortDto> shortComments = comments
+                    .stream()
+                    .map(CommentMapper::toShortDto)
+                    .collect(Collectors.toList());
+            result.setComment(shortComments);
             log.info("Событие id=${} обновлено администратором", event.getId());
             return result;
         } else {
@@ -358,7 +397,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto publishEventByAdmin(long eventId, HttpServletRequest request) {
+    public EventFullDto publishEventByAdmin(long eventId) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             if (LocalDateTime.now().isBefore(targetEvent.get().getEventDate().minusHours(1))) {
@@ -368,7 +407,13 @@ public class EventServiceImpl implements EventService {
                     EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                     Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                     location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
-                    eventFullDto.setViews(getViews(request));
+                    eventFullDto.setViews(getViews(eventId));
+                    List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+                    List<CommentShortDto> shortComments = comments
+                            .stream()
+                            .map(CommentMapper::toShortDto)
+                            .collect(Collectors.toList());
+                    eventFullDto.setComment(shortComments);
                     log.info("Событие id=${} опубликовано администратором", eventFullDto.getId());
                     return eventFullDto;
                 } else {
@@ -384,7 +429,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    public EventFullDto rejectEventByAdmin(long eventId, HttpServletRequest request) {
+    public EventFullDto rejectEventByAdmin(long eventId) {
         Optional<Event> targetEvent = eventRepository.findById(eventId);
         if (targetEvent.isPresent()) {
             if (targetEvent.get().getState().equals(EventState.PENDING)) {
@@ -392,7 +437,13 @@ public class EventServiceImpl implements EventService {
                 EventFullDto eventFullDto = EventMapper.toFullDto(eventRepository.save(targetEvent.get()));
                 Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
-                eventFullDto.setViews(getViews(request));
+                eventFullDto.setViews(eventId);
+                List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+                List<CommentShortDto> shortComments = comments
+                        .stream()
+                        .map(CommentMapper::toShortDto)
+                        .collect(Collectors.toList());
+                eventFullDto.setComment(shortComments);
                 log.info("Событие id=${} отклонено администратором", eventFullDto.getId());
                 return eventFullDto;
             } else {
@@ -403,6 +454,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    @Transactional
     @Override
     public CommentResponseDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto) {
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
@@ -413,8 +465,13 @@ public class EventServiceImpl implements EventService {
                 comment.setEvent(optionalEvent.get());
                 comment.setAuthor(optionalUser.get());
                 Comment savedComment = commentRepository.save(comment);
+                CommentResponseDto commentResponseDto = CommentMapper.toResponseDto(savedComment);
+                commentResponseDto.getEvent().setConfirmedRequests(
+                        requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                                String.valueOf(RequestState.CONFIRMED)).size());
+                commentResponseDto.getEvent().setViews(getViews(eventId));
                 log.info("Комментарий id=${} добавлен", savedComment.getId());
-                return CommentMapper.toResponseDto(savedComment);
+                return commentResponseDto;
             } else {
                 throw new ValidationException("Невозможно добавить комментарий на неопубликованное или отмененное событие");
             }
@@ -423,6 +480,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    @Transactional
     @Override
     public CommentResponseDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto) {
         Optional<Comment> optionalComment = commentRepository.findById(updateCommentDto.getId());
@@ -430,14 +488,20 @@ public class EventServiceImpl implements EventService {
             Comment comment = CommentMapper.toEvent(updateCommentDto);
             comment.setAuthor(optionalComment.get().getAuthor());
             comment.setEvent(optionalComment.get().getEvent());
-            commentRepository.save(comment);
+            Comment savedComment = commentRepository.save(comment);
+            CommentResponseDto commentResponseDto = CommentMapper.toResponseDto(savedComment);
+            commentResponseDto.getEvent().setConfirmedRequests(
+                    requestRepository.findRequestsByEvent_idAndStatus(eventId,
+                            String.valueOf(RequestState.CONFIRMED)).size());
+            commentResponseDto.getEvent().setViews(getViews(eventId));
             log.info("Комментарий id=${} обновлен", comment.getId());
-            return CommentMapper.toResponseDto(comment);
+            return commentResponseDto;
         } else {
             throw new NotFoundException("Указанный комментарий не найден");
         }
     }
 
+    @Transactional
     @Override
     public void deleteComment(long userId, long eventId, long commentId) {
         Optional<Comment> optionalComment = commentRepository.findById(commentId);
@@ -488,17 +552,16 @@ public class EventServiceImpl implements EventService {
                 .block();
     }
 
-    private Long getViews(HttpServletRequest request) {
+    private Long getViews(Long id) {
         return client.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(statsUrl + "/views")
-                        .queryParam("uri", request.getRequestURI())
+                        .queryParam("uri", "/events/" + id)
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(Long.class)
                 .block();
-
     }
 
 

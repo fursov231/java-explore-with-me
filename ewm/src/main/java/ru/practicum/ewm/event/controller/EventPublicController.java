@@ -33,12 +33,11 @@ public class EventPublicController {
                                             @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                             @RequestParam(name = "sort") String sort,
                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                            @Positive @RequestParam(name = "size", defaultValue = "10") int size,
-                                            HttpServletRequest request)  {
+                                            @Positive @RequestParam(name = "size", defaultValue = "10") int size)  {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
         LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
-        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size, request);
+        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size);
     }
 
     @GetMapping("/events/{id}")

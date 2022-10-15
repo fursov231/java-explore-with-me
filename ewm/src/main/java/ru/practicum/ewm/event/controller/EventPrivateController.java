@@ -1,13 +1,13 @@
 package ru.practicum.ewm.event.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
@@ -21,33 +21,32 @@ public class EventPrivateController {
     @GetMapping("/users/{userId}/events")
     public List<EventShortDto> getAllUsersEvents(@PathVariable long userId,
                                                  @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                                 @Positive @RequestParam(name = "size", defaultValue = "10") int size,
-                                                 HttpServletRequest request) {
-        return eventService.getAllUsersEvents(userId, from, size, request);
+                                                 @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
+        return eventService.getAllUsersEvents(userId, from, size);
     }
 
     @PatchMapping("/users/{userId}/events")
     public EventFullDto updateUsersEvent(@PathVariable long userId,
-                                               @RequestBody UpdateEventRequest updateEventRequest, HttpServletRequest request) {
-        return eventService.updateEvent(userId, updateEventRequest, request);
+                                               @RequestBody UpdateEventRequest updateEventRequest) {
+        return eventService.updateEvent(userId, updateEventRequest);
     }
 
     @PostMapping("/users/{userId}/events")
     public EventFullDto addUsersEvent(@PathVariable long userId,
-                                     @RequestBody NewEventDto newEventDto, HttpServletRequest request) {
-        return eventService.addEvent(userId, newEventDto, request);
+                                     @RequestBody NewEventDto newEventDto) {
+        return eventService.addEvent(userId, newEventDto);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
     public EventFullDto getUsersEventById(@PathVariable long userId,
-                                          @PathVariable long eventId, HttpServletRequest request) {
-        return eventService.getUsersEventById(userId, eventId, request);
+                                          @PathVariable long eventId) {
+        return eventService.getUsersEventById(userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
     public EventFullDto cancelUsersEventById(@PathVariable long userId,
-                                             @PathVariable long eventId, HttpServletRequest request) {
-        return eventService.cancelEvent(userId, eventId, request);
+                                             @PathVariable long eventId) {
+        return eventService.cancelEvent(userId, eventId);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}/requests")
@@ -71,21 +70,22 @@ public class EventPrivateController {
     }
 
     @PostMapping("/users/{userId}/events/{eventId}/comments")
-    public CommentRequestDto addNewComment(@RequestParam long userId,
-                                           @RequestParam long eventId, @RequestBody CommentRequestDto commentRequestDto) {
+    public CommentResponseDto addNewComment(@PathVariable long userId,
+                                            @PathVariable long eventId, @RequestBody CommentRequestDto commentRequestDto) {
         return eventService.addNewComment(userId, eventId, commentRequestDto);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/comments")
-    public CommentRequestDto patchComment(@RequestParam long userId,
-                                           @RequestParam long eventId, @RequestBody UpdateCommentDto updateCommentDto) {
+    public CommentResponseDto patchComment(@PathVariable long userId,
+                                           @PathVariable long eventId, @RequestBody UpdateCommentDto updateCommentDto) {
         return eventService.updateComment(userId, eventId, updateCommentDto);
     }
 
     @DeleteMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
-    public CommentRequestDto patchComment(@RequestParam long userId,
-                                          @RequestParam long eventId,
-                                          @RequestParam long commentId) {
-        return eventService.deleteComment(userId, eventId, commentId);
+    public ResponseEntity<String> deleteComment(@PathVariable long userId,
+                                        @PathVariable long eventId,
+                                        @PathVariable long commentId) {
+         eventService.deleteComment(userId, eventId, commentId);
+         return ResponseEntity.ok("Комментарий удален");
     }
 }
