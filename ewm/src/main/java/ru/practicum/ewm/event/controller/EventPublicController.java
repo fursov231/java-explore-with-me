@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -28,16 +28,15 @@ public class EventPublicController {
     public List<EventShortDto> getAllEvents(@RequestParam(name = "text") String text,
                                             @RequestParam(name = "categories") List<Integer> categories,
                                             @RequestParam(name = "paid") boolean paid,
-                                            @RequestParam(name = "rangeStart") String rangeStart,
-                                            @RequestParam(name = "rangeEnd") String rangeEnd,
+                                            @RequestParam(name = "rangeStart")
+                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                            @RequestParam(name = "rangeEnd")
+                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                             @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                             @RequestParam(name = "sort") String sort,
                                             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                             @Positive @RequestParam(name = "size", defaultValue = "10") int size)  {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
-        LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
-        return eventService.getAllEvents(text, categories, paid, start, end, onlyAvailable, SortValue.valueOf(sort), from, size);
+        return eventService.getAllEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, SortValue.valueOf(sort), from, size);
     }
 
     @GetMapping("/events/{id}")
