@@ -15,73 +15,74 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
+@RequestMapping("/users/{userId}/events")
 public class EventPrivateController {
     private final EventService eventService;
 
-    @GetMapping("/users/{userId}/events")
+    @GetMapping
     public List<EventShortDto> getAllUsersEvents(@PathVariable long userId,
                                                  @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                                  @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
         return eventService.getAllUsersEvents(userId, from, size);
     }
 
-    @PatchMapping("/users/{userId}/events")
+    @PatchMapping
     public EventFullDto updateUsersEvent(@PathVariable long userId,
                                                @RequestBody UpdateEventRequest updateEventRequest) {
         return eventService.updateEvent(userId, updateEventRequest);
     }
 
-    @PostMapping("/users/{userId}/events")
+    @PostMapping
     public EventFullDto addUsersEvent(@PathVariable long userId,
                                      @RequestBody NewEventDto newEventDto) {
         return eventService.addEvent(userId, newEventDto);
     }
 
-    @GetMapping("/users/{userId}/events/{eventId}")
+    @GetMapping("/{eventId}")
     public EventFullDto getUsersEventById(@PathVariable long userId,
                                           @PathVariable long eventId) {
         return eventService.getUsersEventById(userId, eventId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}")
+    @PatchMapping("/{eventId}")
     public EventFullDto cancelUsersEventById(@PathVariable long userId,
                                              @PathVariable long eventId) {
         return eventService.cancelEvent(userId, eventId);
     }
 
-    @GetMapping("/users/{userId}/events/{eventId}/requests")
+    @GetMapping("/{eventId}/requests")
     public List<ParticipationRequestDto> getRequests(@PathVariable long userId,
                                                      @PathVariable long eventId) {
         return eventService.getRequests(userId, eventId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/requests/{reqId}/confirm")
+    @PatchMapping("/{eventId}/requests/{reqId}/confirm")
     public ParticipationRequestDto confirmRequest(@PathVariable long userId,
                                                   @PathVariable long eventId,
                                                   @PathVariable long reqId) {
         return eventService.confirmRequest(userId, eventId, reqId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/requests/{reqId}/reject")
+    @PatchMapping("/{eventId}/requests/{reqId}/reject")
     public ParticipationRequestDto rejectRequest(@PathVariable long userId,
                                                  @PathVariable long eventId,
                                                  @PathVariable long reqId) {
         return eventService.rejectRequest(userId, eventId, reqId);
     }
 
-    @PostMapping("/users/{userId}/events/{eventId}/comments")
+    @PostMapping("/{eventId}/comments")
     public CommentResponseDto addNewComment(@PathVariable long userId,
                                             @PathVariable long eventId, @RequestBody CommentRequestDto commentRequestDto) {
         return eventService.addNewComment(userId, eventId, commentRequestDto);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/comments")
+    @PatchMapping("/{eventId}/comments")
     public CommentResponseDto patchComment(@PathVariable long userId,
                                            @PathVariable long eventId, @RequestBody UpdateCommentDto updateCommentDto) {
         return eventService.updateComment(userId, eventId, updateCommentDto);
     }
 
-    @DeleteMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
+    @DeleteMapping("/{eventId}/comments/{commentId}")
     public ResponseEntity<String> deleteComment(@PathVariable long userId,
                                         @PathVariable long eventId,
                                         @PathVariable long commentId) {

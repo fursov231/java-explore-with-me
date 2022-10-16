@@ -18,13 +18,13 @@ import java.time.LocalDateTime;
 @Builder
 public class NewEventDto {
     @NotBlank
-    @Size(max = 500)
+    @Size(max = 1000)
     private String annotation;
 
     private Long category;
 
     @NotBlank
-    @Size(max = 500)
+    @Size(max = 1000)
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)

@@ -16,11 +16,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/admin/events")
 @Validated
 public class EventAdminController {
     private final EventService eventService;
 
-    @GetMapping("/admin/events")
+    @GetMapping
     public List<EventFullDto> findEvents(@RequestParam List<Long> users,
                                          @RequestParam List<EventState> states,
                                          @RequestParam List<Long> categories,
@@ -34,18 +35,18 @@ public class EventAdminController {
         return eventService.findEventsByAdmin(users, states, categories, start, end, from, size);
     }
 
-    @PutMapping("/admin/events/{eventId}")
+    @PutMapping("/{eventId}")
     public EventFullDto editEventById(@PathVariable long eventId,
                                       @RequestBody AdminUpdateEventRequest adminUpdateEventRequest) {
         return eventService.updateEventByAdmin(eventId, adminUpdateEventRequest);
     }
 
-    @PatchMapping("/admin/events/{eventId}/publish")
+    @PatchMapping("/{eventId}/publish")
     public EventFullDto publishEventById(@PathVariable long eventId) {
         return eventService.publishEventByAdmin(eventId);
     }
 
-    @PatchMapping("/admin/events/{eventId}/reject")
+    @PatchMapping("/{eventId}/reject")
     public EventFullDto rejectEventById(@PathVariable long eventId) {
         return eventService.rejectEventByAdmin(eventId);
     }

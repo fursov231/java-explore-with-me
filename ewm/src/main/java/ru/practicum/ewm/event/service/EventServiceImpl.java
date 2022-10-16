@@ -85,12 +85,7 @@ public class EventServiceImpl implements EventService {
             Optional<Location> location = locationRepository.findById(event.getLocationId());
             location.ifPresent(e -> eventFullDto.setLocation(LocationMapper.toDto(e)));
             eventFullDto.setViews(getViews(eventFullDto.getId()));
-            List<Comment> comments = commentRepository.findAllByEvent_Id(eventFullDto.getId());
-            List<CommentShortDto> shortComments = comments
-                    .stream()
-                    .map(CommentMapper::toShortDto)
-                    .collect(Collectors.toList());
-            eventFullDto.setComment(shortComments);
+            eventFullDto.setComment(findComments(eventFullDto.getId()));
             sendHitRequest(request);
         }
         return eventFullDto;
@@ -113,38 +108,24 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     public EventFullDto updateEvent(long userId, UpdateEventRequest updateEventRequest) {
-        Optional<User> optionalTargetUser = userRepository.findById(userId);
+        findUser(userId);
+        Event event = findEvent(updateEventRequest.getEventId());
         if (LocalDateTime.now().isBefore(updateEventRequest.getEventDate().minusHours(2))) {
-            if (optionalTargetUser.isPresent()) {
-                Optional<Event> targetEvent = eventRepository.findById(updateEventRequest.getEventId());
-                if (targetEvent.isPresent()) {
-                    if (!targetEvent.get().getState().equals(EventState.PENDING)
-                            || !targetEvent.get().getState().equals((EventState.CANCELED))) {
-
-                        Event updatedEvent = eventUpdater(targetEvent.get(), updateEventRequest);
-                        eventRepository.save(updatedEvent);
-                        EventFullDto result = EventMapper.toFullDto(updatedEvent);
-                        Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
-                        location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
-                        result.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(result.getId(),
-                                String.valueOf(RequestState.CONFIRMED)).size());
-                        result.setViews(getViews(targetEvent.get().getId()));
-                        List<Comment> comments = commentRepository.findAllByEvent_Id(targetEvent.get().getId());
-                        List<CommentShortDto> shortComments = comments
-                                .stream()
-                                .map(CommentMapper::toShortDto)
-                                .collect(Collectors.toList());
-                        result.setComment(shortComments);
-                        log.info("Событие id=${} обновлено", updateEventRequest.getEventId());
-                        return result;
-                    } else {
-                        throw new ForbiddenException("Обновление данного event невозможно");
-                    }
-                } else {
-                    throw new NotFoundException("Указанный Event не найден");
-                }
+            if (event.getState().equals(EventState.PENDING)
+                    || !event.getState().equals((EventState.CANCELED))) {
+                Event updatedEvent = eventUpdater(event, updateEventRequest);
+                eventRepository.save(updatedEvent);
+                EventFullDto result = EventMapper.toFullDto(updatedEvent);
+                Optional<Location> location = locationRepository.findById(event.getLocationId());
+                location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
+                result.setConfirmedRequests(requestRepository.findRequestsByEvent_idAndStatus(result.getId(),
+                        String.valueOf(RequestState.CONFIRMED)).size());
+                result.setViews(getViews(event.getId()));
+                result.setComment(findComments(event.getId()));
+                log.info("Событие id=${} обновлено", updateEventRequest.getEventId());
+                return result;
             } else {
-                throw new NotFoundException("Указанный userId не найден");
+                throw new ForbiddenException("Обновление данного event невозможно");
             }
         } else {
             throw new ValidationException("Время события не может быть раньше чем за 2 часа от текущего момента");
@@ -165,16 +146,9 @@ public class EventServiceImpl implements EventService {
                 Event savedEvent = eventRepository.save(event);
                 EventFullDto result = EventMapper.toFullDto(savedEvent);
                 result.setLocation(LocationMapper.toDto(location));
-                List<Request> requests = requestRepository.findRequestsByEvent_idAndStatus(event.getId(),
-                        String.valueOf(RequestState.CONFIRMED));
-                result.setConfirmedRequests(requests.size());
-                result.setViews(getViews(event.getId()));
-                List<Comment> comments = commentRepository.findAllByEvent_Id(event.getId());
-                List<CommentShortDto> shortComments = comments
-                        .stream()
-                        .map(CommentMapper::toShortDto)
-                        .collect(Collectors.toList());
-                result.setComment(shortComments);
+                result.setConfirmedRequests(0);
+                result.setViews(0L);
+                result.setComment(new ArrayList<>());
                 log.info("Событие id=${} добавлено", result.getId());
                 return result;
             } else {
@@ -196,12 +170,7 @@ public class EventServiceImpl implements EventService {
                 Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                 location.ifPresent(e -> result.setLocation(LocationMapper.toDto(e)));
                 result.setViews(getViews(eventId));
-                List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
-                List<CommentShortDto> shortComments = comments
-                        .stream()
-                        .map(CommentMapper::toShortDto)
-                        .collect(Collectors.toList());
-                result.setComment(shortComments);
+                result.setComment(findComments(eventId));
                 return result;
             } else {
                 throw new NotFoundException("Указанный event не найден");
@@ -228,12 +197,7 @@ public class EventServiceImpl implements EventService {
                         Optional<Location> location = locationRepository.findById(event.get().getLocationId());
                         location.ifPresent(e -> removableEvent.setLocation(LocationMapper.toDto(e)));
                         removableEvent.setViews(getViews(eventId));
-                        List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
-                        List<CommentShortDto> shortComments = comments
-                                .stream()
-                                .map(CommentMapper::toShortDto)
-                                .collect(Collectors.toList());
-                        removableEvent.setComment(shortComments);
+                        removableEvent.setComment(findComments(eventId));
                         log.info("Событие id=${} отклонено", removableEvent.getId());
                         return removableEvent;
                     } else {
@@ -351,12 +315,7 @@ public class EventServiceImpl implements EventService {
                 Optional<Location> location = locationRepository.findById(event.getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
                 eventFullDto.setViews(getViews(event.getId()));
-                List<Comment> comments = commentRepository.findAllByEvent_Id(event.getId());
-                List<CommentShortDto> shortComments = comments
-                        .stream()
-                        .map(CommentMapper::toShortDto)
-                        .collect(Collectors.toList());
-                eventFullDto.setComment(shortComments);
+                eventFullDto.setComment(findComments(event.getId()));
                 result.add(eventFullDto);
             }
         }
@@ -383,12 +342,7 @@ public class EventServiceImpl implements EventService {
             location.ifPresent(value -> result.setLocation(LocationMapper.toDto(value)));
             Long views = getViews(eventId);
             result.setViews(views);
-            List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
-            List<CommentShortDto> shortComments = comments
-                    .stream()
-                    .map(CommentMapper::toShortDto)
-                    .collect(Collectors.toList());
-            result.setComment(shortComments);
+            result.setComment(findComments(eventId));
             log.info("Событие id=${} обновлено администратором", event.getId());
             return result;
         } else {
@@ -408,12 +362,7 @@ public class EventServiceImpl implements EventService {
                     Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                     location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
                     eventFullDto.setViews(getViews(eventId));
-                    List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
-                    List<CommentShortDto> shortComments = comments
-                            .stream()
-                            .map(CommentMapper::toShortDto)
-                            .collect(Collectors.toList());
-                    eventFullDto.setComment(shortComments);
+                    eventFullDto.setComment(findComments(eventId));
                     log.info("Событие id=${} опубликовано администратором", eventFullDto.getId());
                     return eventFullDto;
                 } else {
@@ -438,12 +387,7 @@ public class EventServiceImpl implements EventService {
                 Optional<Location> location = locationRepository.findById(targetEvent.get().getLocationId());
                 location.ifPresent(value -> eventFullDto.setLocation(LocationMapper.toDto(value)));
                 eventFullDto.setViews(eventId);
-                List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
-                List<CommentShortDto> shortComments = comments
-                        .stream()
-                        .map(CommentMapper::toShortDto)
-                        .collect(Collectors.toList());
-                eventFullDto.setComment(shortComments);
+                eventFullDto.setComment(findComments(eventId));
                 log.info("Событие id=${} отклонено администратором", eventFullDto.getId());
                 return eventFullDto;
             } else {
@@ -562,6 +506,32 @@ public class EventServiceImpl implements EventService {
                 .retrieve()
                 .bodyToMono(Long.class)
                 .block();
+    }
+
+    private User findUser(long userId) {
+        Optional<User> optionalTargetUser = userRepository.findById(userId);
+        if (optionalTargetUser.isPresent()) {
+            return optionalTargetUser.get();
+        } else {
+            throw new NotFoundException("Указанный userId не найден");
+        }
+    }
+
+    private Event findEvent(long eventId) {
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+        if (optionalEvent.isPresent()) {
+            return optionalEvent.get();
+        } else {
+            throw new NotFoundException("Указаннй eventId не найден");
+        }
+    }
+
+    private List<CommentShortDto> findComments(long eventId) {
+        List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+        return comments
+                .stream()
+                .map(CommentMapper::toShortDto)
+                .collect(Collectors.toList());
     }
 
 
