@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.AdminUpdateEventRequest;
@@ -8,7 +9,6 @@ import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.service.EventService;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -17,39 +17,35 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/admin/events")
 @Validated
 public class EventAdminController {
     private final EventService eventService;
 
-    @GetMapping("/admin/events")
+    @GetMapping
     public List<EventFullDto> findEvents(@RequestParam List<Long> users,
                                          @RequestParam List<EventState> states,
                                          @RequestParam List<Long> categories,
-                                         @RequestParam String rangeStart,
-                                         @RequestParam String rangeEnd,
+                                         @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                         @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-                                         @Positive @RequestParam(name = "size", defaultValue = "10") int size,
-                                         HttpServletRequest request) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime start = LocalDateTime.parse(rangeStart, formatter);
-        LocalDateTime end = LocalDateTime.parse(rangeEnd, formatter);
-        return eventService.findEventsByAdmin(users, states, categories, start, end, from, size, request);
+                                         @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
+        return eventService.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
-    @PutMapping("/admin/events/{eventId}")
+    @PutMapping("/{eventId}")
     public EventFullDto editEventById(@PathVariable long eventId,
-                                      @RequestBody AdminUpdateEventRequest adminUpdateEventRequest,
-                                      HttpServletRequest request) {
-        return eventService.updateEventByAdmin(eventId, adminUpdateEventRequest, request);
+                                      @RequestBody AdminUpdateEventRequest adminUpdateEventRequest) {
+        return eventService.updateEventByAdmin(eventId, adminUpdateEventRequest);
     }
 
-    @PatchMapping("/admin/events/{eventId}/publish")
-    public EventFullDto publishEventById(@PathVariable long eventId, HttpServletRequest request) {
-        return eventService.publishEventByAdmin(eventId, request);
+    @PatchMapping("/{eventId}/publish")
+    public EventFullDto publishEventById(@PathVariable long eventId) {
+        return eventService.publishEventByAdmin(eventId);
     }
 
-    @PatchMapping("/admin/events/{eventId}/reject")
-    public EventFullDto rejectEventById(@PathVariable long eventId, HttpServletRequest request) {
-        return eventService.rejectEventByAdmin(eventId, request);
+    @PatchMapping("/{eventId}/reject")
+    public EventFullDto rejectEventById(@PathVariable long eventId) {
+        return eventService.rejectEventByAdmin(eventId);
     }
 }

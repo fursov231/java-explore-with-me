@@ -1,6 +1,10 @@
 package ru.practicum.ewm.event.dto;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
@@ -9,15 +13,16 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EventShortDto extends EventFullDto {
-    public EventShortDto(String annotation, CategoryDto category, LocalDateTime eventDate,
-                         Long id, UserShortDto initiator, boolean paid, String title) {
-        this.annotation = annotation;
-        this.category = category;
-        this.eventDate = eventDate;
-        this.id = id;
-        this.initiator = initiator;
-        this.paid = paid;
-        this.title = title;
-    }
+@AllArgsConstructor
+public class EventShortDto  {
+    protected String annotation;
+    protected CategoryDto category;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    protected LocalDateTime eventDate;
+    protected Long id;
+    protected UserShortDto initiator;
+    protected boolean paid;
+    protected String title;
+    protected Integer confirmedRequests;
+    protected Long views;
 }

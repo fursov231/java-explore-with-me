@@ -14,7 +14,7 @@ public class EventMapper {
     public static EventShortDto toShortDto(Event event) {
         return new EventShortDto(event.getAnnotation(), CategoryMapper.toDto(event.getCategory()),
                 event.getEventDate(), event.getId(), UserMapper.toUserShortDto(event.getInitiator()), event.isPaid(),
-                event.getTitle());
+                event.getTitle(), null, null);
     }
 
     //+ set confirmedRequest, locationDto, views
