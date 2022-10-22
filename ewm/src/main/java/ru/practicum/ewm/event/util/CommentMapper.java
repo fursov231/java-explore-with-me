@@ -28,10 +28,9 @@ public class CommentMapper {
                 .build();
     }
 
-    //+user, event
+    //+user, event, commentId
     public static Comment toEvent(UpdateCommentDto updateCommentDto) {
         return Comment.builder()
-                .id(updateCommentDto.getId())
                 .text(updateCommentDto.getText())
                 .created(LocalDateTime.now())
                 .build();

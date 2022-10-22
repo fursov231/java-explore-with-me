@@ -76,10 +76,12 @@ public class EventPrivateController {
         return eventService.addNewComment(userId, eventId, commentRequestDto);
     }
 
-    @PatchMapping("/{eventId}/comments")
+    @PatchMapping("/{eventId}/comments/{commentId}")
     public CommentResponseDto patchComment(@PathVariable long userId,
-                                           @PathVariable long eventId, @RequestBody UpdateCommentDto updateCommentDto) {
-        return eventService.updateComment(userId, eventId, updateCommentDto);
+                                           @PathVariable long eventId,
+                                           @PathVariable long commentId,
+                                           @RequestBody UpdateCommentDto updateCommentDto) {
+        return eventService.updateComment(userId, eventId, commentId, updateCommentDto);
     }
 
     @DeleteMapping("/{eventId}/comments/{commentId}")

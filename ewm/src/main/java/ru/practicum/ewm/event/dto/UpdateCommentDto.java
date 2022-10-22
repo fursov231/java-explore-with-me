@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateCommentDto {
-    private Long id;
     private String text;
     private Long authorId;
     private Long eventId;

@@ -28,9 +28,11 @@ public class EventPublicController {
     public List<EventShortDto> getAllEvents(@RequestParam(name = "text") String text,
                                             @RequestParam(name = "categories") List<Integer> categories,
                                             @RequestParam(name = "paid") boolean paid,
-                                            @RequestParam(name = "rangeStart")
+                                            @RequestParam(name = "rangeStart", required = false,
+                                                    defaultValue = "#{T(java.time.LocalDateTime).now()}")
                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                            @RequestParam(name = "rangeEnd")
+                                            @RequestParam(name = "rangeEnd", required = false,
+                                                    defaultValue = "#{T(java.time.LocalDateTime).now().plusYears(100)}")
                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                             @RequestParam(name = "onlyAvailable") boolean onlyAvailable,
                                             @RequestParam(name = "sort") String sort,

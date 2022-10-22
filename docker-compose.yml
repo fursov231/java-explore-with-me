@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: ewm
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
+      TZ: "Europe/Moscow"
 
   stats-db:
     image: postgres:14.5-alpine
@@ -23,6 +24,7 @@ services:
       POSTGRES_DB: stats
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
+      TZ: "Europe/Moscow"
 
   ewm-server:
     build: ./ewm
@@ -34,7 +36,8 @@ services:
       - ewm-db
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
-      STATS_URL: http://stats-server:9090
+      STATS_URL: stats-server:9090
+      TZ: "Europe/Moscow"
 
   stats-server:
     build: ./statistics
@@ -46,6 +49,7 @@ services:
       - stats-db
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      TZ: "Europe/Moscow"
 
 
 

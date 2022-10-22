@@ -26,8 +26,10 @@ public class EventAdminController {
     public List<EventFullDto> findEvents(@RequestParam List<Long> users,
                                          @RequestParam List<EventState> states,
                                          @RequestParam List<Long> categories,
-                                         @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                         @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                         @RequestParam(required = false, defaultValue = "#{T(java.time.LocalDateTime).now()}")
+                                             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                         @RequestParam(required = false, defaultValue = "#{T(java.time.LocalDateTime).now().plusDays(1)}")
+                                             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
                                          @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
         return eventService.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);

@@ -426,10 +426,11 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public CommentResponseDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto) {
-        Optional<Comment> optionalComment = commentRepository.findById(updateCommentDto.getId());
+    public CommentResponseDto updateComment(long userId, long eventId, long commendId, UpdateCommentDto updateCommentDto) {
+        Optional<Comment> optionalComment = commentRepository.findById(commendId);
         if (optionalComment.isPresent()) {
             Comment comment = CommentMapper.toEvent(updateCommentDto);
+            comment.setId(commendId);
             comment.setAuthor(optionalComment.get().getAuthor());
             comment.setEvent(optionalComment.get().getEvent());
             Comment savedComment = commentRepository.save(comment);
