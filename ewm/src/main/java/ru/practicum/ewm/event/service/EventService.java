@@ -44,7 +44,7 @@ public interface EventService {
 
     CommentResponseDto addNewComment(long userId, long eventId, CommentRequestDto commentRequestDto);
 
-    CommentResponseDto updateComment(long userId, long eventId, UpdateCommentDto updateCommentDto);
+    CommentResponseDto updateComment(long userId, long eventId, long commentId, UpdateCommentDto updateCommentDto);
 
     void deleteComment(long userId, long eventId, long commentId);
 }
